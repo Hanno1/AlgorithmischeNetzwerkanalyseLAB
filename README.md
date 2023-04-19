@@ -19,7 +19,14 @@ Klasse Graph:
 
 - new Graph() -> erzeugt leeren Graph...
 
+Extra Methoden:
+- SingleSourceShortestPath()
+- All-PairsShortestPath()
+- Shortes-s-t-Path()
+- getConnectedComponents()
+
 METIS:
 
 Zeile 1: n m (n - Knotenanzahl, m - Kantenanzahl)
 Zeile 2 - m (i): Nachbarschaft von Knoten i
+
