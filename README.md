@@ -16,6 +16,8 @@ Klasse Graph:
 
 - addNode()
 - addEdge()
+- readGraph() -> 2 methods
+- writeGraph() -> 2 methods
 
 - new Graph() -> erzeugt leeren Graph...
 
