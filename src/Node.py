@@ -1,4 +1,3 @@
 class Node:
-    def __init__(self, id):
-        self.id = id
-        # self.name = name
+    def __init__(self, ext_id, int_id):
+        self.id = ext_id
