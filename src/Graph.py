@@ -134,10 +134,8 @@ class Graph:
     def removeNode(self, idx):
         # remove node and all connections to other nodes
         if idx not in self.nodes:
-            print(f"Node with {idx} does not exist")
-            raise ValueError
-        connections = self.edges[idx]
-        for c in connections:
+            return
+        for c in self.edges[idx]:
             self.edges[c].remove(idx)
         del self.edges[idx]
         del self.nodes[idx]
@@ -161,9 +159,9 @@ class Graph:
         self.m += 1
 
     def removeEdge(self, id1, id2):
-        if id1 not in self.nodes or id2 not in self.nodes:
-            print(f"Node {id1} or {id2} do not exist")
-            raise ValueError
+        if id1 not in self.nodes or id2 not in self.nodes or \
+                id2 not in self.edges[id1]:
+            return
         self.edges[id1].remove(id2)
         self.edges[id2].remove(id1)
 
