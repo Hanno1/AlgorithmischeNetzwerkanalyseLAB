@@ -38,7 +38,7 @@ class Graph:
                     split = line.split(" ")
                     if split[0] == "" or len(split) != 2:
                         raise IndexError
-                    self.addEdge(split[0], split[1])
+                    self.addEdge(int(split[0]), int(split[1]))
                 file.close()
         except FileNotFoundError:
             print(f"No such file {path}")
