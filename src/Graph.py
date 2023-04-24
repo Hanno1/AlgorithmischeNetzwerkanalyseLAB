@@ -1,4 +1,5 @@
-from Node import Node
+from src.Node import Node
+import src.exception as exc
 
 
 class Graph:
@@ -15,7 +16,7 @@ class Graph:
             if modus == self.READ_MOD_EDGE_LIST:
                 self.readGraphAsEdgeList(path)
             elif modus == self.READ_MOD_METIS:
-                self.readGraphAsMetis(path)
+                self.read_graph_metis(path)
             else:
                 print(f"Unknown mode for reading a file {modus}")
 
@@ -28,7 +29,6 @@ class Graph:
         :param path: path there the file is stored
         """
         line_index = 0
-        line = ""
         try:
             with open(path) as file:
                 for line in file:
@@ -37,58 +37,54 @@ class Graph:
                         continue
                     split = line.split(" ")
                     if split[0] == "" or len(split) != 2:
-                        raise IndexError
+                        raise exc.UnknownSyntax(line_index, line)
                     self.addEdge(int(split[0]), int(split[1]))
                 file.close()
         except FileNotFoundError:
             print(f"No such file {path}")
             raise FileNotFoundError
-        except IndexError:
-            print(f"Found bad format at line number {line_index}: {line}")
-            raise IndexError
 
-    def readGraphAsMetis(self, path):
+    def read_graph_metis(self, path):
         try:
             with open(path) as file:
                 first_line = file.readline()
+                # global line number encodes the real line in the file we read. It will count comment lines.
+                # code_number wont count comment lines
+                global_line_number: int = 0
+                code_number: int = 1
                 while not first_line or first_line[0] == "%" or first_line[0] == "#":
+                    global_line_number += 1
                     if not first_line:
-                        print("Empty first line. Please correct format!")
-                        raise Exception
+                        raise exc.EmptyLine(global_line_number)
                     first_line = file.readline()
                 split = first_line.split(" ")
                 n, m = int(split[0]), int(split[1])
                 for idx in range(1, n + 1):
                     self.addNode(idx)
-                counter = 1
                 for line in file:
                     line = line.replace("\n", "")
                     if not line:
-                        if counter > n:
-                            raise ValueError
-                        counter += 1
+                        if code_number > n:
+                            raise exc.TooManyLines(global_line_number, line)
+                        global_line_number += 1
                         continue
                     if line[0] == "%" or line[0] == "#":
+                        global_line_number += 1
                         continue
-                    if counter > n:
-                        raise ValueError
+                    if code_number > n:
+                        raise exc.TooManyLines(global_line_number, line)
                     split = line.split(" ")
                     for connection in split:
                         if int(connection) > n:
-                            raise IndexError
-                        self.addEdge(counter, int(connection))
-                    counter += 1
+                            raise exc.BadNodeId(global_line_number, connection, n)
+                        self.addEdge(code_number, int(connection))
+                    code_number += 1
+                    global_line_number += 1
                 if self.m != m:
                     print("Number of edges is not right!")
         except FileNotFoundError:
             print(f"No such file {path}")
             raise FileNotFoundError
-        except ValueError:
-            print("too many lines. Please check file!")
-            raise ValueError
-        except IndexError:
-            print(f"the node ids have to be numbers between 1 and {n}.")
-            raise IndexError
 
     def saveGraphAsEdgeList(self, name):
         try:
@@ -121,7 +117,9 @@ class Graph:
                 f.write(f"{mapNodeId[connection]} ")
         f.close()
 
-    def addNode(self, idx):
+    def addNode(self, idx: int):
+        if type(idx) != int:
+            print(f"Expected Integer, got {type(idx)} instead!")
         if idx in self.nodes:
             print(f"Node with id {idx} exists already!")
             raise ValueError
@@ -137,6 +135,7 @@ class Graph:
             return
         for c in self.edges[idx]:
             self.edges[c].remove(idx)
+            self.m -= 1
         del self.edges[idx]
         del self.nodes[idx]
 
