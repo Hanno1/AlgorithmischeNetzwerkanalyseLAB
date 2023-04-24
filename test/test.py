@@ -1,10 +1,7 @@
-from Graph import Graph
-import networkx as nx
-from shortestPaths import single_source_shortest_path
-from shortestPaths import all_pair_shortest_path
-from shortestPaths import all_pair_shortest_path_parallel
+from src.Graph import Graph
+import src.shortestPaths as sp
 import timeit
-
+import networkx as nx
 
 
 G = Graph()
@@ -31,7 +28,7 @@ nxG = nx.read_edgelist(network_file,comments="%")
 id = 2 # node-ID for testing
 
 ## single source
-dist = single_source_shortest_path(G,id)
+dist = sp.single_source_shortest_path(G,id)
 dist_nx = nx.single_target_shortest_path_length(nxG, str(id))
 
 for node in dist_nx:
@@ -39,7 +36,7 @@ for node in dist_nx:
     assert(dist[int(node_id)] == d)
 
 ## all pairs
-dist_all = all_pair_shortest_path_parallel(G)[id]
+dist_all = sp.all_pair_shortest_path_parallel(G)[id]
 dist_all_nx = dict(nx.all_pairs_shortest_path_length(nxG))[str(id)]
 
 for node in dist_all_nx:
@@ -52,9 +49,9 @@ nxG = nx.read_edgelist(network_file,comments="%")
 print(nxG)
 
 num_iterations = 10
-time_all_pairs = timeit.timeit(lambda: all_pair_shortest_path(G), number=num_iterations)
+time_all_pairs = timeit.timeit(lambda: sp.all_pair_shortest_path(G), number=num_iterations)
 print("all_pair_shortest_path: ", time_all_pairs)
-time_all_pairs_par = timeit.timeit(lambda: all_pair_shortest_path_parallel(G), number=num_iterations)
+time_all_pairs_par = timeit.timeit(lambda: sp.all_pair_shortest_path_parallel(G), number=num_iterations)
 print("all_pair_shortest_path_parallel: ", time_all_pairs_par)
 time_all_pairs_lengths = timeit.timeit(lambda: nx.all_pairs_shortest_path_length(nxG), number=num_iterations)
 print("networkx - all_pair_shortest_path_length: ", time_all_pairs_lengths)
