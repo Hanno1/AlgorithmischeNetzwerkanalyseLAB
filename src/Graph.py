@@ -109,22 +109,15 @@ class Graph:
             f = open(name + ".txt", "w")
 
         f.write(f"{self.n} {self.m}")
-        """mapNodeId = dict()
-        c = 1
-        for key in self.nodes:
-            mapNodeId[key] = c
-            c += 1"""
         for key in self.edges:
             f.write("\n")
             first = True
             for connection in self.edges[key]:
                 if first:
                     first = False
-                    # f.write(f"{mapNodeId[connection]}")
-                    f.write(f"{self.internal_ids.index(connection)}")
+                    f.write(f"{self.internal_ids.index(connection) + 1}")
                     continue
-                # f.write(f" {mapNodeId[connection]}")
-                f.write(f" {self.internal_ids.index(connection)}")
+                f.write(f" {self.internal_ids.index(connection) + 1}")
         f.close()
 
     def addNode(self, idx: int):

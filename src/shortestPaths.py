@@ -2,6 +2,7 @@ from collections import deque
 from src.Graph import Graph
 import multiprocessing
 import src.exception as exc
+import math
 
 
 def single_source_shortest_path(G: Graph, s):
@@ -9,7 +10,7 @@ def single_source_shortest_path(G: Graph, s):
         raise exc.NodeDoesNotExist(s)
     dist = {}
     for n in G.nodes:
-        dist[n] = float('inf')
+        dist[n] = math.inf
     dist[s] = 0
     queue = deque([s])
     visited = {s}
@@ -113,3 +114,22 @@ def biDirSearch(G: Graph, s_id, t_id):
                 shortest_path.append(node_IDs[t_parent[i]])
                 i = t_parent[i]
             return shortest_path, len(shortest_path)
+
+
+def connected_components(G: Graph):
+    components = []
+    visited = []
+
+    for i in G.nodes.keys():
+        if i in visited:
+            continue
+
+        component = set()
+        d = single_source_shortest_path(G, i)
+        for key in d:
+            value = d[key]
+            if value < math.inf:
+                component.add(key)
+                visited.append(key)
+        components.append(component)
+    return components
