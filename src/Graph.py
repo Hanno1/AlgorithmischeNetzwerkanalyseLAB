@@ -12,6 +12,8 @@ class Graph:
         self.n = 0
         self.m = 0
 
+        self.internal_mapping = dict()
+
         if path is not None:
             if modus == self.READ_MOD_EDGE_LIST:
                 self.readGraphAsEdgeList(path)

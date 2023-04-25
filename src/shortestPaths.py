@@ -1,12 +1,16 @@
 from collections import deque
-from Graph import Graph
+from src.Graph import Graph
 import multiprocessing
+import src.exception as exc
 
-def single_source_shortest_path(G : Graph, s):
+
+def single_source_shortest_path(G: Graph, s):
+    if s not in G.nodes:
+        raise exc.NodeDoesNotExist(s)
     dist = {}
     for n in G.nodes:
         dist[n] = float('inf')
-    dist[s]=0
+    dist[s] = 0
     queue = deque([s])
     visited = {s}
     while queue:
@@ -18,12 +22,14 @@ def single_source_shortest_path(G : Graph, s):
                 dist[v] = dist[u]+1
     return dist
 
-def all_pair_shortest_path(G : Graph):
+
+def all_pair_shortest_path(G: Graph):
     dist = {}
     for v in G.nodes:
         v_id = G.nodes[v].id
-        dist[v_id] = single_source_shortest_path(G,v_id)
+        dist[v_id] = single_source_shortest_path(G, v_id)
     return dist
+
 
 def _calc_shortest_paths(node_chunk, G):
     dist_chunk = {}
@@ -31,6 +37,7 @@ def _calc_shortest_paths(node_chunk, G):
         v_id = G.nodes[v].id
         dist_chunk[v_id] = single_source_shortest_path(G, v_id)
     return dist_chunk
+
 
 def all_pair_shortest_path_parallel(G):
     dist = {}
