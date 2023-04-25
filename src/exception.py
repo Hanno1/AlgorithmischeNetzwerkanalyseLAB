@@ -22,3 +22,8 @@ class TooManyLines(Exception):
 class BadNodeId(Exception):
     def __init__(self, line_number, idx, max_id):
         super().__init__(f"Unknown Node id {idx} at line {line_number}. Maximal possible node id is {max_id}.")
+
+
+class NodeDoesNotExist(Exception):
+    def __init__(self, idx):
+        super().__init__(f"Node with id {idx} does not exist!")

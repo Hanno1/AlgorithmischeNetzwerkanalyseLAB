@@ -67,6 +67,7 @@ class Graph:
                         if code_number > n:
                             raise exc.TooManyLines(global_line_number, line)
                         global_line_number += 1
+                        code_number += 1
                         continue
                     if line[0] == "%" or line[0] == "#":
                         global_line_number += 1
@@ -82,6 +83,7 @@ class Graph:
                     global_line_number += 1
                 if self.m != m:
                     print("Number of edges is not right!")
+                file.close()
         except FileNotFoundError:
             print(f"No such file {path}")
             raise FileNotFoundError
@@ -90,7 +92,7 @@ class Graph:
         try:
             f = open(name + ".txt", "x")
         except FileExistsError:
-            f = open(name + "txt", "w")
+            f = open(name + ".txt", "w")
         for key in self.edges:
             value = self.edges[key]
             for connection in value:
@@ -102,7 +104,7 @@ class Graph:
         try:
             f = open(name + ".txt", "x")
         except FileExistsError:
-            f = open(name + "txt", "w")
+            f = open(name + ".txt", "w")
 
         f.write(f"{self.n} {self.m}")
         mapNodeId = dict()
@@ -110,11 +112,14 @@ class Graph:
         for key in self.nodes:
             mapNodeId[key] = c
             c += 1
-
         for key in self.edges:
             f.write("\n")
+            first = True
             for connection in self.edges[key]:
-                f.write(f"{mapNodeId[connection]} ")
+                if not first:
+                    f.write(" ")
+                first = False
+                f.write(f"{mapNodeId[connection]}")
         f.close()
 
     def addNode(self, idx: int):
@@ -132,7 +137,7 @@ class Graph:
     def removeNode(self, idx):
         # remove node and all connections to other nodes
         if idx not in self.nodes:
-            return
+            raise exc.NodeDoesNotExist(idx)
         for c in self.edges[idx]:
             self.edges[c].remove(idx)
             self.m -= 1
@@ -142,9 +147,6 @@ class Graph:
         self.n -= 1
 
     def addEdge(self, id1, id2):
-        if id1 == id2:
-            print("Paths have to connect different nodes!")
-            raise ValueError
         if id1 not in self.nodes:
             self.addNode(id1)
         if id2 not in self.nodes:
@@ -167,17 +169,18 @@ class Graph:
         self.m -= 1
 
     def testNeighbors(self, id1, id2):
-        if id1 not in self.nodes or id2 not in self.nodes:
-            print(f"Node {id1} or {id2} do not exist")
-        if id1 in self.edges[id1]:
+        if id1 not in self.nodes:
+            raise exc.NodeDoesNotExist(id1)
+        elif id2 not in self.nodes:
+            raise exc.NodeDoesNotExist(id2)
+        if id2 in self.edges[id1]:
             return True
         return False
 
     def getNeighbors(self, idx):
         if idx in self.nodes:
             return self.edges[idx]
-        print(f"Node {idx} does not exist")
-        raise ValueError
+        raise exc.NodeDoesNotExist(idx)
 
     def getNodeDegree(self, idx):
         return len(self.getNeighbors(idx))
