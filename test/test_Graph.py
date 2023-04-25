@@ -97,18 +97,17 @@ class TestGraph(TestCase):
 
     def test_save_graph_metis(self):
         G, n, m = HelperClass.createGraph()
-
         G.saveGraphAsMetis("test")
 
         with open("test.txt") as file:
             line = file.readline().replace("\n", "")
             self.assertEqual(line, f"{n} {m}")
             line = file.readline().replace("\n", "")
-            self.assertEqual(line, "11")
+            self.assertEqual(line, "10")
             line = file.readline().replace("\n", "")
-            self.assertEqual(line, "3 4")
+            self.assertEqual(line, "2 3")
             line = file.readline().replace("\n", "")
-            self.assertEqual(line, "2 6")
+            self.assertEqual(line, "1 5")
 
     def test_read_graph_metis(self):
         G, n, m = HelperClass.createGraph()

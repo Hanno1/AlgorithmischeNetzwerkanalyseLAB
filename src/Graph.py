@@ -12,7 +12,7 @@ class Graph:
         self.n = 0
         self.m = 0
 
-        self.internal_mapping = dict()
+        self.internal_ids = []
 
         if path is not None:
             if modus == self.READ_MOD_EDGE_LIST:
@@ -109,19 +109,22 @@ class Graph:
             f = open(name + ".txt", "w")
 
         f.write(f"{self.n} {self.m}")
-        mapNodeId = dict()
+        """mapNodeId = dict()
         c = 1
         for key in self.nodes:
             mapNodeId[key] = c
-            c += 1
+            c += 1"""
         for key in self.edges:
             f.write("\n")
             first = True
             for connection in self.edges[key]:
-                if not first:
-                    f.write(" ")
-                first = False
-                f.write(f"{mapNodeId[connection]}")
+                if first:
+                    first = False
+                    # f.write(f"{mapNodeId[connection]}")
+                    f.write(f"{self.internal_ids.index(connection)}")
+                    continue
+                # f.write(f" {mapNodeId[connection]}")
+                f.write(f" {self.internal_ids.index(connection)}")
         f.close()
 
     def addNode(self, idx: int):
@@ -134,6 +137,7 @@ class Graph:
         self.nodes[idx] = newNode
         self.edges[idx] = set()
 
+        self.internal_ids.append(idx)
         self.n += 1
 
     def removeNode(self, idx):
@@ -145,6 +149,7 @@ class Graph:
             self.m -= 1
         del self.edges[idx]
         del self.nodes[idx]
+        self.internal_ids.remove(idx)
 
         self.n -= 1
 
