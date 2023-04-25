@@ -1,3 +1,4 @@
+import copy
 from collections import deque
 from src.Graph import Graph
 import multiprocessing
@@ -24,12 +25,47 @@ def single_source_shortest_path(G: Graph, s):
     return dist
 
 
+def single_source_shortest_path_vector(G: Graph, s, mapping):
+    if s not in G.nodes:
+        raise exc.NodeDoesNotExist(s)
+    dist = [math.inf for _ in range(len(mapping))]
+    dist[mapping.index(s)] = 0
+
+    queue = deque([s])
+    visited = {s}
+    while queue:
+        u = queue.popleft()
+        current_dist = dist[mapping.index(u)] + 1
+        for v in G.getNeighbors(u):
+            if v not in visited:
+                visited.add(v)
+                queue.append(v)
+                dist[mapping.index(v)] = current_dist
+    return dist, mapping
+
+
 def all_pair_shortest_path(G: Graph):
     dist = {}
     for v in G.nodes:
         v_id = G.nodes[v].id
         dist[v_id] = single_source_shortest_path(G, v_id)
     return dist
+
+
+def all_pair_shortest_path_matrix(G: Graph):
+    G_prime = copy.deepcopy(G)
+
+    matrix = [[math.inf for _ in range(G_prime.n)] for _ in range(G_prime.n)]
+    mapping = copy.deepcopy(G_prime.internal_ids)
+    nodes_copy = copy.deepcopy(G_prime.nodes)
+    for i in range(len(mapping)):
+        v_id = nodes_copy[mapping[i]].id
+        vec, _ = single_source_shortest_path_vector(G_prime, v_id, mapping)
+        for col in range(i, len(mapping)):
+            matrix[i][col] = vec[col]
+            matrix[col][i] = vec[col]
+        G_prime.removeNode(v_id)
+    return matrix, mapping
 
 
 def _calc_shortest_paths(node_chunk, G):
@@ -73,7 +109,7 @@ def breadthFirstSearch(G: Graph, node_IDs: list, visited: list, parent: list, qu
 
 def checkCollision(number_of_nodes, s_visited: list, t_visited: list):
     for i in range(number_of_nodes):
-        if s_visited[i] == t_visited[i]:
+        if s_visited[i] and t_visited[i]:
             return i
     return -1
 
@@ -98,7 +134,7 @@ def biDirSearch(G: Graph, s_id, t_id):
     t_visited[t] = True
     t_queue.append(t)
 
-    while s_queue or t_queue:
+    while s_queue and t_queue:
         breadthFirstSearch(G, node_IDs, s_visited, s_parent, s_queue)
         breadthFirstSearch(G, node_IDs, t_visited, t_parent, t_queue)
         intersection = checkCollision(G.n, s_visited, t_visited)
@@ -113,7 +149,8 @@ def biDirSearch(G: Graph, s_id, t_id):
             while i != t:
                 shortest_path.append(node_IDs[t_parent[i]])
                 i = t_parent[i]
-            return shortest_path, len(shortest_path)
+            return shortest_path, len(shortest_path) - 1
+    return [], math.inf
 
 
 def connected_components(G: Graph):
