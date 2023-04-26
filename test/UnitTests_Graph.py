@@ -27,8 +27,7 @@ class TestGraph(TestCase):
         self.assertEqual(G.n, n)
         self.assertEqual(G.m, m-1)
 
-        G.remove_edge(5, 4)
-        self.assertEqual(G.m, m-1)
+        self.assertRaises(Exc.EdgeDoesNotExistException, G.remove_edge, 5, 4)
 
     def test_neighbors(self):
         G, n, m = HelperClass.create_graph()

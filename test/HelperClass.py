@@ -22,9 +22,8 @@ def create_graph():
 
     # 2
     G.add_edge(6, 7)
-    G.add_edge(7, 8)
     G.add_edge(6, 8)
-    m += 3
+    m += 2
 
     # 3
     G.add_edge(0, -1)

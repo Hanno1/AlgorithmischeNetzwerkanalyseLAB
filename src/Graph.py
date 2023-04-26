@@ -34,6 +34,7 @@ class Graph:
         try:
             with open(path) as file:
                 for line in file:
+                    line = line.replace("\n", "")
                     line_index += 1
                     if line[0] == "%" or line[0] == "#":
                         continue
@@ -100,7 +101,7 @@ class Graph:
             value = self.edges[key]
             for connection in value:
                 if connection >= key:
-                    node_id_connection = self.internal_ids_node_ids[key]
+                    node_id_connection = self.internal_ids_node_ids[connection]
                     f.write(f"{node_id} {node_id_connection}\n")
         f.close()
 
@@ -129,7 +130,7 @@ class Graph:
 
     def add_node(self, idx):
         if idx in self.node_ids_internal_ids:
-            raise ValueError(f"Node with id {idx} exists already!")
+            return
         internal_id = self.max_idx
 
         self.edges[internal_id] = set()
@@ -162,9 +163,12 @@ class Graph:
             self.add_node(id1)
         if id2 not in self.node_ids_internal_ids:
             self.add_node(id2)
+        if id1 == id2:
+            raise ValueError(f"Nodes have to be different!")
         # check if edge already exist
-        if id2 in self.edges[id1]:
+        if self.node_ids_internal_ids[id2] in self.edges[self.node_ids_internal_ids[id1]]:
             return
+
         self.edges[self.node_ids_internal_ids[id1]].add(self.node_ids_internal_ids[id2])
         self.edges[self.node_ids_internal_ids[id2]].add(self.node_ids_internal_ids[id1])
 
@@ -175,11 +179,12 @@ class Graph:
             raise Exc.NodeDoesNotExistException(id1)
         if id2 not in self.node_ids_internal_ids:
             raise Exc.NodeDoesNotExistException(id2)
-        if id1 not in self.edges[id2]:
-            raise Exc.EdgeDoesNotExistException(id1, id2)
 
         internal_id1 = self.node_ids_internal_ids[id1]
         internal_id2 = self.node_ids_internal_ids[id2]
+
+        if internal_id1 not in self.edges[internal_id2]:
+            raise Exc.EdgeDoesNotExistException(id1, id2)
 
         self.edges[internal_id1].remove(internal_id2)
         self.edges[internal_id2].remove(internal_id1)
@@ -205,6 +210,7 @@ class Graph:
             ret_edges = set()
             for edge in edges:
                 ret_edges.add(self.internal_ids_node_ids[edge])
+            return ret_edges
         raise Exc.NodeDoesNotExistException(idx)
 
     def get_node_degree(self, idx):
