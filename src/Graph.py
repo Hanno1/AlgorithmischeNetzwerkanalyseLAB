@@ -18,7 +18,7 @@ class Graph:
         self.n = 0
         self.m = 0
 
-        self.max_idx = 0
+        self.max_internal_idx = 0
         self.node_ids_internal_ids = dict()
         self.internal_ids_node_ids = dict()
 
@@ -57,9 +57,9 @@ class Graph:
 
     def read_graph_metis(self, path):
         """
-        :param path: path there the metis file is saved
+        initialize Graph from metis files and ignore comments that start with % or #
 
-        
+        :param path: path there the metis file is saved
         """
         try:
             with open(path) as file:
@@ -105,6 +105,9 @@ class Graph:
             raise FileNotFoundError
 
     def save_graph_as_edge_list(self, name):
+        """
+        :param name: name or path there the file is stored. ending .txt gets appended automatically
+        """
         try:
             f = open(name + ".txt", "x")
         except FileExistsError:
@@ -119,17 +122,26 @@ class Graph:
         f.close()
 
     def save_graph_metis(self, name):
+        """
+        save Graph in metis format. since metis can only store node ids that are an integer, we create a new mapping
+        that maps internal ids to integers (from 0 to n-1)
+
+        :param name: name or path there the file is stored. ending .txt gets appended automatically
+        """
         try:
             f = open(name + ".txt", "x")
         except FileExistsError:
             f = open(name + ".txt", "w")
 
         f.write(f"{self.n} {self.m}")
+
+        # create new mapping
         new_internal_mapping = dict()
         counter = 0
         for key in self.internal_ids_node_ids:
             new_internal_mapping[key] = counter
             counter += 1
+
         for key in self.edges:
             f.write("\n")
             first = True
@@ -142,22 +154,33 @@ class Graph:
         f.close()
 
     def add_node(self, idx):
+        """
+        add a new node to the Graph. Since we want consistent data types we will change idx to a string.
+        The index may not contain whitespaces
+
+        :param idx: name or index of the node
+        """
         idx = str(idx)
         if len(idx.split(" ")) > 1:
             raise Exc.InvalidNodeIdException(idx)
         if idx in self.node_ids_internal_ids:
             return
-        internal_id = self.max_idx
+        internal_id = self.max_internal_idx
 
         self.edges[internal_id] = set()
 
         self.node_ids_internal_ids[idx] = internal_id
         self.internal_ids_node_ids[internal_id] = idx
-        self.max_idx += 1
-
+        self.max_internal_idx += 1
         self.n += 1
 
     def remove_node(self, idx):
+        """
+        removes a node from the Graph. First we check if the node exists. If it does we remove all the edges
+        that connect the node with other nodes.
+
+        :param idx: index of the node we want to remove
+        """
         idx = str(idx)
         # remove node and all connections to other nodes
         if idx not in self.node_ids_internal_ids:
@@ -176,6 +199,13 @@ class Graph:
         self.n -= 1
 
     def add_edge(self, id1, id2):
+        """
+        add an edge between node id1 and id2. If the nodes do not exists we create them automatically.
+        The node ids have to be different for now
+
+        :param id1: node id 1
+        :param id2: node id 2
+        """
         id1 = str(id1)
         id2 = str(id2)
         if id1 == id2:
@@ -194,6 +224,13 @@ class Graph:
         self.m += 1
 
     def remove_edge(self, id1, id2):
+        """
+        remove an edge between id1 and id2. If one of the nodes do not exist we throw an error. If the edge does
+        not exist we just return
+
+        :param id1: node id 1
+        :param id2: node id 2
+        """
         id1 = str(id1)
         id2 = str(id2)
         if id1 not in self.node_ids_internal_ids:
@@ -213,6 +250,9 @@ class Graph:
         self.m -= 1
 
     def test_neighbors(self, id1, id2):
+        """
+        test if id1 and id2 are neighbors of each other. First we check if the nodes exist.
+        """
         id1 = str(id1)
         id2 = str(id2)
         if id1 not in self.node_ids_internal_ids:
@@ -227,6 +267,10 @@ class Graph:
         return False
 
     def get_neighbors(self, idx):
+        """
+        get all neighbors of the node with name idx. Since the edges are saved with internal IDs,
+        we have to cast the back.
+        """
         idx = str(idx)
         if idx in self.node_ids_internal_ids:
             internal_id = self.node_ids_internal_ids[idx]
@@ -238,6 +282,9 @@ class Graph:
         raise Exc.NodeDoesNotExistException(idx)
 
     def get_internal_neighbors(self, internal_id):
+        """
+        get all neighbors from the node with internal id == internal_id. Returns Internal Ids of the neighbors.
+        """
         if internal_id in self.internal_ids_node_ids:
             return self.edges[internal_id]
         raise Exc.NodeDoesNotExistException(internal_id)
