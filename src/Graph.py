@@ -30,6 +30,9 @@ class Graph:
             else:
                 print(f"Unknown mode for reading a file {mode}")
 
+    def get_nodes(self):
+        return set(self.node_ids_internal_ids.keys())
+
     def read_graph_as_edge_list(self, path):
         """
         read Graph as a edge list. meaning lines in the file have the form "1 2"...
