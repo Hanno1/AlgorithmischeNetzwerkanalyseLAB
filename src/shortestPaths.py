@@ -25,22 +25,22 @@ def single_source_shortest_path(G: Graph, s):
     return dist
 
 
-def single_source_shortest_path_vector(G: Graph, s, mapping):
-    if s not in G.nodes:
-        raise Exc.NodeDoesNotExistException(s)
+def single_source_shortest_path_vector(G: Graph, node_idx, mapping):
+    if node_idx not in G.nodes:
+        raise Exc.NodeDoesNotExistException(node_idx)
     dist = [math.inf for _ in range(len(mapping))]
-    dist[mapping.index(s)] = 0
+    dist[mapping[node_idx]] = 0
 
-    queue = deque([s])
-    visited = {s}
+    queue = deque([node_idx])
+    visited = {node_idx}
     while queue:
         u = queue.popleft()
-        current_dist = dist[mapping.index(u)] + 1
+        current_dist = dist[mapping[u]] + 1
         for v in G.get_neighbors(u):
             if v not in visited:
                 visited.add(v)
                 queue.append(v)
-                dist[mapping.index(v)] = current_dist
+                dist[mapping[v]] = current_dist
     return dist, mapping
 
 
@@ -55,16 +55,17 @@ def all_pair_shortest_path(G: Graph):
 def all_pair_shortest_path_matrix(G: Graph):
     G_prime = copy.deepcopy(G)
 
-    matrix = [[math.inf for _ in range(G_prime.n)] for _ in range(G_prime.n)]
-    mapping = copy.deepcopy(G_prime.internal_ids)
-    nodes_copy = copy.deepcopy(G_prime.nodes)
-    for i in range(len(mapping)):
-        v_id = nodes_copy[mapping[i]].id
-        vec, _ = single_source_shortest_path_vector(G_prime, v_id, mapping)
-        for col in range(i, len(mapping)):
-            matrix[i][col] = vec[col]
-            matrix[col][i] = vec[col]
-        G_prime.remove_node(v_id)
+    matrix = [[math.inf for _ in range(G.n)] for _ in range(G.n)]
+    mapping = G.get_internal_mapping()
+
+    counter = 0
+    for key in G.nodes:
+        vec, _ = single_source_shortest_path_vector(G_prime, key, mapping)
+        for col in range(counter, len(mapping)):
+            matrix[counter][col] = vec[col]
+            matrix[col][counter] = vec[col]
+        G_prime.remove_node(key)
+        counter += 1
     return matrix, mapping
 
 

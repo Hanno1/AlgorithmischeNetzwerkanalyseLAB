@@ -12,8 +12,6 @@ class Graph:
         self.n = 0
         self.m = 0
 
-        self.internal_ids = []
-
         if path is not None:
             if mode == self.READ_MOD_EDGE_LIST:
                 self.read_graph_as_edge_list(path)
@@ -53,7 +51,7 @@ class Graph:
                 # global line number encodes the real line in the file we read. It will count comment lines.
                 # code_number wont count comment lines
                 global_line_number: int = 0
-                code_number: int = 1
+                code_number: int = 0
                 while not first_line or first_line[0] == "%" or first_line[0] == "#":
                     global_line_number += 1
                     if not first_line:
@@ -61,12 +59,12 @@ class Graph:
                     first_line = file.readline()
                 split = first_line.split(" ")
                 n, m = int(split[0]), int(split[1])
-                for idx in range(1, n + 1):
+                for idx in range(0, n):
                     self.add_node(idx)
                 for line in file:
                     line = line.replace("\n", "")
                     if not line:
-                        if code_number > n:
+                        if code_number > n-1:
                             raise Exc.TooManyLinesException(global_line_number, line)
                         global_line_number += 1
                         code_number += 1
@@ -74,11 +72,11 @@ class Graph:
                     if line[0] == "%" or line[0] == "#":
                         global_line_number += 1
                         continue
-                    if code_number > n:
+                    if code_number > n-1:
                         raise Exc.TooManyLinesException(global_line_number, line)
                     split = line.split(" ")
                     for connection in split:
-                        if int(connection) > n:
+                        if int(connection) > n-1:
                             raise Exc.BadNodeIdException(global_line_number, connection, n)
                         self.add_edge(code_number, int(connection))
                     code_number += 1
@@ -109,28 +107,35 @@ class Graph:
             f = open(name + ".txt", "w")
 
         f.write(f"{self.n} {self.m}")
+        mapping = self.get_internal_mapping()
         for key in self.edges:
             f.write("\n")
             first = True
             for connection in self.edges[key]:
                 if first:
                     first = False
-                    f.write(f"{self.internal_ids.index(connection) + 1}")
+                    f.write(f"{mapping[connection]}")
                     continue
-                f.write(f" {self.internal_ids.index(connection) + 1}")
+                f.write(f" {mapping[connection]}")
         f.close()
+
+    def get_internal_mapping(self):
+        counter = 0
+        internal_mapping = dict()
+        for key in self.nodes:
+            internal_mapping[key] = counter
+            counter += 1
+        return internal_mapping
 
     def add_node(self, idx: int):
         if type(idx) != int:
-            print(f"Expected Integer, got {type(idx)} instead!")
+            raise ValueError(f"Expected Integer, got {type(idx)} instead!")
         if idx in self.nodes:
-            print(f"Node with id {idx} exists already!")
-            raise ValueError
+            raise ValueError(f"Node with id {idx} exists already!")
         new_node = Node(idx, None)
         self.nodes[idx] = new_node
         self.edges[idx] = set()
 
-        self.internal_ids.append(idx)
         self.n += 1
 
     def remove_node(self, idx):
@@ -142,7 +147,6 @@ class Graph:
             self.m -= 1
         del self.edges[idx]
         del self.nodes[idx]
-        self.internal_ids.remove(idx)
 
         self.n -= 1
 

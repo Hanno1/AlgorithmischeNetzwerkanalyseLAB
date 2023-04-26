@@ -102,11 +102,11 @@ class TestGraph(TestCase):
             line = file.readline().replace("\n", "")
             self.assertEqual(line, f"{n} {m}")
             line = file.readline().replace("\n", "")
-            self.assertEqual(line, "2")
-            line = file.readline().replace("\n", "")
             self.assertEqual(line, "1")
             line = file.readline().replace("\n", "")
-            self.assertEqual(line, "4")
+            self.assertEqual(line, "0")
+            line = file.readline().replace("\n", "")
+            self.assertEqual(line, "3")
 
     def test_read_graph_metis(self):
         G, n, m = HelperClass.create_graph()
