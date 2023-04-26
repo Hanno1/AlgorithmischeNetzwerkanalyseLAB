@@ -12,15 +12,21 @@ def single_source_shortest_path(G: Graph, s):
     for n in G.node_ids_internal_ids:
         dist[n] = math.inf
     dist[s] = 0
-    queue = deque([s])
-    visited = {s}
+
+    internal_s = G.node_ids_internal_ids[s]
+
+    queue = deque([internal_s])
+    visited = {internal_s}
     while queue:
         u = queue.popleft()
-        for v in G.get_neighbors(u):
+        external_u = G.internal_ids_node_ids[u]
+        for v in G.get_internal_neighbors(u):
             if v not in visited:
                 visited.add(v)
                 queue.append(v)
-                dist[v] = dist[u] + 1
+
+                external_v = G.internal_ids_node_ids[v]
+                dist[external_v] = dist[external_u] + 1
     return dist
 
 

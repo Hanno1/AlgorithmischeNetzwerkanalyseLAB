@@ -6,6 +6,14 @@ class Graph:
     READ_MOD_METIS = "metis"
 
     def __init__(self, path=None, mode=READ_MOD_EDGE_LIST):
+        """
+        :param path: path to a file to read
+        :param mode: modes to read. You can read a edge list file or a metis file
+
+        intern each node has an additional id, that is used for computation. This is better since we don't have
+        to use the external id (that might be a string or something else) the entire time (i.e. for saving).
+        To map internal to external id and back we use "node_ids_internal_ids" and "internal_ids_node_ids"
+        """
         self.edges = dict()
         self.n = 0
         self.m = 0
@@ -212,6 +220,11 @@ class Graph:
                 ret_edges.add(self.internal_ids_node_ids[edge])
             return ret_edges
         raise Exc.NodeDoesNotExistException(idx)
+
+    def get_internal_neighbors(self, internal_id):
+        if internal_id in self.internal_ids_node_ids:
+            return self.edges[internal_id]
+        raise Exc.NodeDoesNotExistException(internal_id)
 
     def get_node_degree(self, idx):
         return len(self.get_neighbors(idx))
