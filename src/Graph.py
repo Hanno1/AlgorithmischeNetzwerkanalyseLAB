@@ -304,6 +304,8 @@ class Graph:
     def print_edges(self):
         for key in self.edges:
             node_id = self.internal_ids_node_ids[key]
+            if self.get_node_degree(node_id) == 0:
+                continue
             tmp = f"{node_id}: "
             value = self.edges[key]
             for v in value:
