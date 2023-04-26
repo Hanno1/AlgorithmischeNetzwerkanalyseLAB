@@ -6,12 +6,12 @@ import networkx as nx
 
 G = Graph()
 
-G.addNode(1)
-G.addNode(2)
-G.addNode(3)
-G.addEdge(2, 3)
-G.addEdge(1, 3)
-G.addEdge(4, 8)
+G.add_node(1)
+G.add_node(2)
+G.add_node(3)
+G.add_edge(2, 3)
+G.add_edge(1, 3)
+G.add_edge(4, 8)
 
 # G.saveGraphAsMetis("metisTest")
 

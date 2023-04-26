@@ -1,12 +1,12 @@
 from src.Node import Node
-import src.exception as exc
+import src.CustomExceptions as Exc
 
 
 class Graph:
     READ_MOD_EDGE_LIST = "edgeList"
     READ_MOD_METIS = "metis"
 
-    def __init__(self, path=None, modus=READ_MOD_EDGE_LIST):
+    def __init__(self, path=None, mode=READ_MOD_EDGE_LIST):
         self.nodes = dict()
         self.edges = dict()
         self.n = 0
@@ -15,14 +15,14 @@ class Graph:
         self.internal_ids = []
 
         if path is not None:
-            if modus == self.READ_MOD_EDGE_LIST:
-                self.readGraphAsEdgeList(path)
-            elif modus == self.READ_MOD_METIS:
+            if mode == self.READ_MOD_EDGE_LIST:
+                self.read_graph_as_edge_list(path)
+            elif mode == self.READ_MOD_METIS:
                 self.read_graph_metis(path)
             else:
-                print(f"Unknown mode for reading a file {modus}")
+                print(f"Unknown mode for reading a file {mode}")
 
-    def readGraphAsEdgeList(self, path):
+    def read_graph_as_edge_list(self, path):
         """
         read Graph as a edge list. meaning lines in the file have the form "1 2"...
         We will ignore comments that start with a "#" or a "%"
@@ -39,8 +39,8 @@ class Graph:
                         continue
                     split = line.split(" ")
                     if split[0] == "" or len(split) != 2:
-                        raise exc.UnknownSyntax(line_index, line)
-                    self.addEdge(int(split[0]), int(split[1]))
+                        raise Exc.UnknownSyntaxException(line_index, line)
+                    self.add_edge(int(split[0]), int(split[1]))
                 file.close()
         except FileNotFoundError:
             print(f"No such file {path}")
@@ -57,17 +57,17 @@ class Graph:
                 while not first_line or first_line[0] == "%" or first_line[0] == "#":
                     global_line_number += 1
                     if not first_line:
-                        raise exc.EmptyLine(global_line_number)
+                        raise Exc.EmptyLineException(global_line_number)
                     first_line = file.readline()
                 split = first_line.split(" ")
                 n, m = int(split[0]), int(split[1])
                 for idx in range(1, n + 1):
-                    self.addNode(idx)
+                    self.add_node(idx)
                 for line in file:
                     line = line.replace("\n", "")
                     if not line:
                         if code_number > n:
-                            raise exc.TooManyLines(global_line_number, line)
+                            raise Exc.TooManyLinesException(global_line_number, line)
                         global_line_number += 1
                         code_number += 1
                         continue
@@ -75,12 +75,12 @@ class Graph:
                         global_line_number += 1
                         continue
                     if code_number > n:
-                        raise exc.TooManyLines(global_line_number, line)
+                        raise Exc.TooManyLinesException(global_line_number, line)
                     split = line.split(" ")
                     for connection in split:
                         if int(connection) > n:
-                            raise exc.BadNodeId(global_line_number, connection, n)
-                        self.addEdge(code_number, int(connection))
+                            raise Exc.BadNodeIdException(global_line_number, connection, n)
+                        self.add_edge(code_number, int(connection))
                     code_number += 1
                     global_line_number += 1
                 if self.m != m:
@@ -90,7 +90,7 @@ class Graph:
             print(f"No such file {path}")
             raise FileNotFoundError
 
-    def saveGraphAsEdgeList(self, name):
+    def save_graph_as_edge_list(self, name):
         try:
             f = open(name + ".txt", "x")
         except FileExistsError:
@@ -102,7 +102,7 @@ class Graph:
                     f.write(f"{key} {connection}\n")
         f.close()
 
-    def saveGraphAsMetis(self, name):
+    def save_graph_metis(self, name):
         try:
             f = open(name + ".txt", "x")
         except FileExistsError:
@@ -120,23 +120,23 @@ class Graph:
                 f.write(f" {self.internal_ids.index(connection) + 1}")
         f.close()
 
-    def addNode(self, idx: int):
+    def add_node(self, idx: int):
         if type(idx) != int:
             print(f"Expected Integer, got {type(idx)} instead!")
         if idx in self.nodes:
             print(f"Node with id {idx} exists already!")
             raise ValueError
-        newNode = Node(idx, None)
-        self.nodes[idx] = newNode
+        new_node = Node(idx, None)
+        self.nodes[idx] = new_node
         self.edges[idx] = set()
 
         self.internal_ids.append(idx)
         self.n += 1
 
-    def removeNode(self, idx):
+    def remove_node(self, idx):
         # remove node and all connections to other nodes
         if idx not in self.nodes:
-            raise exc.NodeDoesNotExist(idx)
+            raise Exc.NodeDoesNotExistException(idx)
         for c in self.edges[idx]:
             self.edges[c].remove(idx)
             self.m -= 1
@@ -146,11 +146,11 @@ class Graph:
 
         self.n -= 1
 
-    def addEdge(self, id1, id2):
+    def add_edge(self, id1, id2):
         if id1 not in self.nodes:
-            self.addNode(id1)
+            self.add_node(id1)
         if id2 not in self.nodes:
-            self.addNode(id2)
+            self.add_node(id2)
         # check if edge already exist
         if id2 in self.edges[id1]:
             return
@@ -159,7 +159,7 @@ class Graph:
 
         self.m += 1
 
-    def removeEdge(self, id1, id2):
+    def remove_edge(self, id1, id2):
         if id1 not in self.nodes or id2 not in self.nodes or \
                 id2 not in self.edges[id1]:
             return
@@ -168,30 +168,30 @@ class Graph:
 
         self.m -= 1
 
-    def testNeighbors(self, id1, id2):
+    def test_neighbors(self, id1, id2):
         if id1 not in self.nodes:
-            raise exc.NodeDoesNotExist(id1)
+            raise Exc.NodeDoesNotExistException(id1)
         elif id2 not in self.nodes:
-            raise exc.NodeDoesNotExist(id2)
+            raise Exc.NodeDoesNotExistException(id2)
         if id2 in self.edges[id1]:
             return True
         return False
 
-    def getNeighbors(self, idx):
+    def get_neighbors(self, idx):
         if idx in self.nodes:
             return self.edges[idx]
-        raise exc.NodeDoesNotExist(idx)
+        raise Exc.NodeDoesNotExistException(idx)
 
-    def getNodeDegree(self, idx):
-        return len(self.getNeighbors(idx))
+    def get_node_degree(self, idx):
+        return len(self.get_neighbors(idx))
 
-    def printNodes(self):
+    def print_nodes(self):
         s = ""
         for key in self.nodes:
             s += str(self.nodes[key].id) + " "
         print(f"the Graph contains the following Nodes: {s}")
 
-    def printEdges(self):
+    def print_edges(self):
         for key in self.edges:
             tmp = f"{key}: "
             value = self.edges[key]

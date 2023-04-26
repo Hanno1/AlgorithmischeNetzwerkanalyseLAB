@@ -2,13 +2,13 @@ import copy
 from collections import deque
 from src.Graph import Graph
 import multiprocessing
-import src.exception as exc
+import src.CustomExceptions as Exc
 import math
 
 
 def single_source_shortest_path(G: Graph, s):
     if s not in G.nodes:
-        raise exc.NodeDoesNotExist(s)
+        raise Exc.NodeDoesNotExistException(s)
     dist = {}
     for n in G.nodes:
         dist[n] = math.inf
@@ -17,7 +17,7 @@ def single_source_shortest_path(G: Graph, s):
     visited = {s}
     while queue:
         u = queue.popleft()
-        for v in G.getNeighbors(u):
+        for v in G.get_neighbors(u):
             if v not in visited:
                 visited.add(v)
                 queue.append(v)
@@ -27,7 +27,7 @@ def single_source_shortest_path(G: Graph, s):
 
 def single_source_shortest_path_vector(G: Graph, s, mapping):
     if s not in G.nodes:
-        raise exc.NodeDoesNotExist(s)
+        raise Exc.NodeDoesNotExistException(s)
     dist = [math.inf for _ in range(len(mapping))]
     dist[mapping.index(s)] = 0
 
@@ -36,7 +36,7 @@ def single_source_shortest_path_vector(G: Graph, s, mapping):
     while queue:
         u = queue.popleft()
         current_dist = dist[mapping.index(u)] + 1
-        for v in G.getNeighbors(u):
+        for v in G.get_neighbors(u):
             if v not in visited:
                 visited.add(v)
                 queue.append(v)
@@ -64,7 +64,7 @@ def all_pair_shortest_path_matrix(G: Graph):
         for col in range(i, len(mapping)):
             matrix[i][col] = vec[col]
             matrix[col][i] = vec[col]
-        G_prime.removeNode(v_id)
+        G_prime.remove_node(v_id)
     return matrix, mapping
 
 
@@ -97,9 +97,9 @@ def all_pair_shortest_path_parallel(G):
     return dist
 
 
-def breadthFirstSearch(G: Graph, node_IDs: list, visited: list, parent: list, queue: list):
+def breadth_first_search(G: Graph, node_IDs: list, visited: list, parent: list, queue: list):
     current_node = queue.pop(0)
-    for node_id in G.getNeighbors(node_IDs[current_node]):
+    for node_id in G.get_neighbors(node_IDs[current_node]):
         node = node_IDs.index(node_id)
         if not visited[node]:
             visited[node] = True
@@ -107,17 +107,17 @@ def breadthFirstSearch(G: Graph, node_IDs: list, visited: list, parent: list, qu
             queue.append(node)
 
 
-def checkCollision(number_of_nodes, s_visited: list, t_visited: list):
+def check_collision(number_of_nodes, s_visited: list, t_visited: list):
     for i in range(number_of_nodes):
         if s_visited[i] and t_visited[i]:
             return i
     return -1
 
 
-def biDirSearch(G: Graph, s_id, t_id):
-    node_IDs = list(G.nodes.keys())
-    s = node_IDs.index(s_id)
-    t = node_IDs.index(t_id)
+def shortest_s_t_path(G: Graph, s_id, t_id):
+    node_ids = list(G.nodes.keys())
+    s = node_ids.index(s_id)
+    t = node_ids.index(t_id)
     shortest_path = []
 
     s_visited = [False] * G.n
@@ -135,19 +135,19 @@ def biDirSearch(G: Graph, s_id, t_id):
     t_queue.append(t)
 
     while s_queue and t_queue:
-        breadthFirstSearch(G, node_IDs, s_visited, s_parent, s_queue)
-        breadthFirstSearch(G, node_IDs, t_visited, t_parent, t_queue)
-        intersection = checkCollision(G.n, s_visited, t_visited)
+        breadth_first_search(G, node_ids, s_visited, s_parent, s_queue)
+        breadth_first_search(G, node_ids, t_visited, t_parent, t_queue)
+        intersection = check_collision(G.n, s_visited, t_visited)
         if intersection != -1:
             i = intersection
-            shortest_path.append(node_IDs[i])
+            shortest_path.append(node_ids[i])
             while i != s:
-                shortest_path.append(node_IDs[s_parent[i]])
+                shortest_path.append(node_ids[s_parent[i]])
                 i = s_parent[i]
             shortest_path.reverse()
             i = intersection
             while i != t:
-                shortest_path.append(node_IDs[t_parent[i]])
+                shortest_path.append(node_ids[t_parent[i]])
                 i = t_parent[i]
             return shortest_path, len(shortest_path) - 1
     return [], math.inf

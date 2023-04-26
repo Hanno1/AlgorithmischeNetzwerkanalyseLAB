@@ -1,48 +1,48 @@
 from src.Graph import Graph
 
 
-def createGraph():
+def create_graph():
     G = Graph()
     n = 0
     m = 0
 
     for i in range(-1, 14):
-        G.addNode(i)
+        G.add_node(i)
         n += 1
-    G.addNode(15)
+    G.add_node(15)
     n += 1
 
     # connected component 1
-    G.addEdge(1, 2)
-    G.addEdge(2, 3)
-    G.addEdge(3, 4)
-    G.addEdge(4, 5)
-    G.addEdge(3, 5)
+    G.add_edge(1, 2)
+    G.add_edge(2, 3)
+    G.add_edge(3, 4)
+    G.add_edge(4, 5)
+    G.add_edge(3, 5)
     m += 5
 
     # 2
-    G.addEdge(6, 7)
-    G.addEdge(7, 8)
-    G.addEdge(6, 8)
+    G.add_edge(6, 7)
+    G.add_edge(7, 8)
+    G.add_edge(6, 8)
     m += 3
 
     # 3
-    G.addEdge(0, -1)
+    G.add_edge(0, -1)
     m += 1
 
     # 4
-    G.addEdge(10, 11)
-    G.addEdge(11, 12)
-    G.addEdge(12, 13)
-    G.addEdge(10, 13)
+    G.add_edge(10, 11)
+    G.add_edge(11, 12)
+    G.add_edge(12, 13)
+    G.add_edge(10, 13)
     m += 4
 
     return G, n, m
 
 
-def readGraphEdgeList(path):
+def read_graph_as_edge_list(path):
     return Graph(path, Graph.READ_MOD_EDGE_LIST)
 
 
-def readGraphMetis(path):
+def read_graph_metis(path):
     return Graph(path, Graph.READ_MOD_METIS)
