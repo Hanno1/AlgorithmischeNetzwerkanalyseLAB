@@ -23,8 +23,7 @@ class TestShortestPaths(TestCase):
 
         self.assertEqual(dist[mapping[0]], math.inf)
         self.assertEqual(dist[mapping[1]], 0)
-        self.assertEqual(dist[mapping[4
-        ]], 3)
+        self.assertEqual(dist[mapping[4]], 3)
 
     def test_all_pair_shortest_path(self):
         G, n, m = HelperClass.create_graph()

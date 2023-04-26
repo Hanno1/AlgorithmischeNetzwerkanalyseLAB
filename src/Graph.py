@@ -1,4 +1,3 @@
-from src.Node import Node
 import src.CustomExceptions as Exc
 
 
@@ -7,10 +6,13 @@ class Graph:
     READ_MOD_METIS = "metis"
 
     def __init__(self, path=None, mode=READ_MOD_EDGE_LIST):
-        self.nodes = dict()
         self.edges = dict()
         self.n = 0
         self.m = 0
+
+        self.max_idx = 0
+        self.node_ids_internal_ids = dict()
+        self.internal_ids_node_ids = dict()
 
         if path is not None:
             if mode == self.READ_MOD_EDGE_LIST:
@@ -38,7 +40,7 @@ class Graph:
                     split = line.split(" ")
                     if split[0] == "" or len(split) != 2:
                         raise Exc.UnknownSyntaxException(line_index, line)
-                    self.add_edge(int(split[0]), int(split[1]))
+                    self.add_edge(split[0], split[1])
                 file.close()
         except FileNotFoundError:
             print(f"No such file {path}")
@@ -94,10 +96,12 @@ class Graph:
         except FileExistsError:
             f = open(name + ".txt", "w")
         for key in self.edges:
+            node_id = self.internal_ids_node_ids[key]
             value = self.edges[key]
             for connection in value:
                 if connection >= key:
-                    f.write(f"{key} {connection}\n")
+                    node_id_connection = self.internal_ids_node_ids[key]
+                    f.write(f"{node_id} {node_id_connection}\n")
         f.close()
 
     def save_graph_metis(self, name):
@@ -107,83 +111,100 @@ class Graph:
             f = open(name + ".txt", "w")
 
         f.write(f"{self.n} {self.m}")
-        mapping = self.get_internal_mapping()
+        new_internal_mapping = dict()
+        counter = 0
+        for key in self.internal_ids_node_ids:
+            new_internal_mapping[key] = counter
+            counter += 1
         for key in self.edges:
             f.write("\n")
             first = True
             for connection in self.edges[key]:
                 if first:
                     first = False
-                    f.write(f"{mapping[connection]}")
+                    f.write(f"{new_internal_mapping[connection]}")
                     continue
-                f.write(f" {mapping[connection]}")
+                f.write(f" {new_internal_mapping[connection]}")
         f.close()
 
-    def get_internal_mapping(self):
-        counter = 0
-        internal_mapping = dict()
-        for key in self.nodes:
-            internal_mapping[key] = counter
-            counter += 1
-        return internal_mapping
-
-    def add_node(self, idx: int):
-        if type(idx) != int:
-            raise ValueError(f"Expected Integer, got {type(idx)} instead!")
-        if idx in self.nodes:
+    def add_node(self, idx):
+        if idx in self.node_ids_internal_ids:
             raise ValueError(f"Node with id {idx} exists already!")
-        new_node = Node(idx, None)
-        self.nodes[idx] = new_node
-        self.edges[idx] = set()
+        internal_id = self.max_idx
+
+        self.edges[internal_id] = set()
+
+        self.node_ids_internal_ids[idx] = internal_id
+        self.internal_ids_node_ids[internal_id] = idx
+        self.max_idx += 1
 
         self.n += 1
 
     def remove_node(self, idx):
         # remove node and all connections to other nodes
-        if idx not in self.nodes:
+        if idx not in self.node_ids_internal_ids:
             raise Exc.NodeDoesNotExistException(idx)
-        for c in self.edges[idx]:
-            self.edges[c].remove(idx)
+
+        internal_id = self.node_ids_internal_ids[idx]
+        for c in self.edges[internal_id]:
+            self.edges[c].remove(internal_id)
             self.m -= 1
-        del self.edges[idx]
-        del self.nodes[idx]
+
+        del self.edges[internal_id]
+
+        del self.internal_ids_node_ids[internal_id]
+        del self.node_ids_internal_ids[idx]
 
         self.n -= 1
 
     def add_edge(self, id1, id2):
-        if id1 not in self.nodes:
+        if id1 not in self.node_ids_internal_ids:
             self.add_node(id1)
-        if id2 not in self.nodes:
+        if id2 not in self.node_ids_internal_ids:
             self.add_node(id2)
         # check if edge already exist
         if id2 in self.edges[id1]:
             return
-        self.edges[id1].add(id2)
-        self.edges[id2].add(id1)
+        self.edges[self.node_ids_internal_ids[id1]].add(self.node_ids_internal_ids[id2])
+        self.edges[self.node_ids_internal_ids[id2]].add(self.node_ids_internal_ids[id1])
 
         self.m += 1
 
     def remove_edge(self, id1, id2):
-        if id1 not in self.nodes or id2 not in self.nodes or \
-                id2 not in self.edges[id1]:
-            return
-        self.edges[id1].remove(id2)
-        self.edges[id2].remove(id1)
+        if id1 not in self.node_ids_internal_ids:
+            raise Exc.NodeDoesNotExistException(id1)
+        if id2 not in self.node_ids_internal_ids:
+            raise Exc.NodeDoesNotExistException(id2)
+        if id1 not in self.edges[id2]:
+            raise Exc.EdgeDoesNotExistException(id1, id2)
+
+        internal_id1 = self.node_ids_internal_ids[id1]
+        internal_id2 = self.node_ids_internal_ids[id2]
+
+        self.edges[internal_id1].remove(internal_id2)
+        self.edges[internal_id2].remove(internal_id1)
 
         self.m -= 1
 
     def test_neighbors(self, id1, id2):
-        if id1 not in self.nodes:
+        if id1 not in self.node_ids_internal_ids:
             raise Exc.NodeDoesNotExistException(id1)
-        elif id2 not in self.nodes:
+        elif id2 not in self.node_ids_internal_ids:
             raise Exc.NodeDoesNotExistException(id2)
-        if id2 in self.edges[id1]:
+
+        internal_id1 = self.node_ids_internal_ids[id1]
+        internal_id2 = self.node_ids_internal_ids[id2]
+        if internal_id1 in self.edges[internal_id2]:
             return True
         return False
 
     def get_neighbors(self, idx):
-        if idx in self.nodes:
-            return self.edges[idx]
+        if idx in self.node_ids_internal_ids:
+            internal_id = self.node_ids_internal_ids[idx]
+            edges = self.edges[internal_id]
+            ret_edges = set()
+            for edge in edges:
+                ret_edges.add(self.internal_ids_node_ids[edge])
         raise Exc.NodeDoesNotExistException(idx)
 
     def get_node_degree(self, idx):
@@ -191,14 +212,16 @@ class Graph:
 
     def print_nodes(self):
         s = ""
-        for key in self.nodes:
-            s += str(self.nodes[key].id) + " "
+        for key in self.node_ids_internal_ids:
+            s += str(key) + " "
         print(f"the Graph contains the following Nodes: {s}")
 
     def print_edges(self):
         for key in self.edges:
-            tmp = f"{key}: "
+            node_id = self.internal_ids_node_ids[key]
+            tmp = f"{node_id}: "
             value = self.edges[key]
             for v in value:
-                tmp += str(v) + " "
+                node_id = self.internal_ids_node_ids[v]
+                tmp += str(node_id) + " "
             print(tmp)
