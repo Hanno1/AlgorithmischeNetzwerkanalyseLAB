@@ -17,33 +17,16 @@ class TestShortestPaths(TestCase):
         self.assertEqual(dist[-1], math.inf)
         self.assertEqual(dist[9], math.inf)
 
-        mapping = G.get_internal_mapping()
-
-        dist, mapping = sP.single_source_shortest_path_vector(G, 1, mapping)
-
-        self.assertEqual(dist[mapping[0]], math.inf)
-        self.assertEqual(dist[mapping[1]], 0)
-        self.assertEqual(dist[mapping[4]], 3)
-
     def test_all_pair_shortest_path(self):
         G, n, m = HelperClass.create_graph()
-        dist, mapping = sP.all_pair_shortest_path_matrix(G)
+        dist = sP.all_pair_shortest_path(G)
 
-        self.assertEqual(dist[mapping[0]][mapping[-1]], 1)
-        self.assertEqual(dist[mapping[-1]][mapping[0]], 1)
-
-        self.assertEqual(dist[mapping[1]][mapping[1]], 0)
-
-        self.assertEqual(dist[mapping[2]][mapping[5]], 2)
-        self.assertEqual(dist[mapping[3]][mapping[5]], 1)
-        self.assertEqual(dist[mapping[1]][mapping[5]], 3)
-        self.assertEqual(dist[mapping[4]][mapping[1]], 3)
-        self.assertEqual(dist[mapping[5]][mapping[3]], 1)
-
-        self.assertEqual(dist[mapping[0]][mapping[1]], math.inf)
-
-        self.assertEqual(dist[mapping[9]][mapping[1]], math.inf)
-        self.assertEqual(dist[mapping[10]][mapping[13]], 1)
+        self.assertEqual(dist[0][-1], 1)
+        self.assertEqual(dist[7][8], 2)
+        self.assertEqual(dist[1][4], 3)
+        self.assertEqual(dist[10][13], 1)
+        self.assertEqual(dist[9][15], math.inf)
+        self.assertEqual(dist[-1][0], 1)
 
     def test_bi_directional_search(self):
         G, n, m = HelperClass.create_graph()

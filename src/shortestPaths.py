@@ -1,4 +1,3 @@
-import copy
 from collections import deque
 from src.Graph import Graph
 import multiprocessing
@@ -7,10 +6,10 @@ import math
 
 
 def single_source_shortest_path(G: Graph, s):
-    if s not in G.nodes:
+    if s not in G.node_ids_internal_ids:
         raise Exc.NodeDoesNotExistException(s)
     dist = {}
-    for n in G.nodes:
+    for n in G.node_ids_internal_ids:
         dist[n] = math.inf
     dist[s] = 0
     queue = deque([s])
@@ -25,48 +24,11 @@ def single_source_shortest_path(G: Graph, s):
     return dist
 
 
-def single_source_shortest_path_vector(G: Graph, node_idx, mapping):
-    if node_idx not in G.nodes:
-        raise Exc.NodeDoesNotExistException(node_idx)
-    dist = [math.inf for _ in range(len(mapping))]
-    dist[mapping[node_idx]] = 0
-
-    queue = deque([node_idx])
-    visited = {node_idx}
-    while queue:
-        u = queue.popleft()
-        current_dist = dist[mapping[u]] + 1
-        for v in G.get_neighbors(u):
-            if v not in visited:
-                visited.add(v)
-                queue.append(v)
-                dist[mapping[v]] = current_dist
-    return dist, mapping
-
-
 def all_pair_shortest_path(G: Graph):
     dist = {}
-    for v in G.nodes:
-        v_id = G.nodes[v].id
-        dist[v_id] = single_source_shortest_path(G, v_id)
+    for v in G.node_ids_internal_ids:
+        dist[v] = single_source_shortest_path(G, v)
     return dist
-
-
-def all_pair_shortest_path_matrix(G: Graph):
-    G_prime = copy.deepcopy(G)
-
-    matrix = [[math.inf for _ in range(G.n)] for _ in range(G.n)]
-    mapping = G.get_internal_mapping()
-
-    counter = 0
-    for key in G.nodes:
-        vec, _ = single_source_shortest_path_vector(G_prime, key, mapping)
-        for col in range(counter, len(mapping)):
-            matrix[counter][col] = vec[col]
-            matrix[col][counter] = vec[col]
-        G_prime.remove_node(key)
-        counter += 1
-    return matrix, mapping
 
 
 def _calc_shortest_paths(node_chunk, G):
@@ -116,7 +78,7 @@ def check_collision(number_of_nodes, s_visited: list, t_visited: list):
 
 
 def shortest_s_t_path(G: Graph, s_id, t_id):
-    node_ids = list(G.nodes.keys())
+    node_ids = list(G.node_ids_internal_ids.keys())
     s = node_ids.index(s_id)
     t = node_ids.index(t_id)
     shortest_path = []
@@ -158,7 +120,7 @@ def connected_components(G: Graph):
     components = []
     visited = []
 
-    for i in G.nodes.keys():
+    for i in G.node_ids_internal_ids.keys():
         if i in visited:
             continue
 
