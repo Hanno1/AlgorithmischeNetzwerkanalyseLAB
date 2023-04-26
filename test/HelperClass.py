@@ -39,6 +39,22 @@ def create_graph():
     return G, n, m
 
 
+def create_graph_text():
+    G = Graph()
+
+    G.add_node("Node1")
+    G.add_node("Node2")
+
+    G.add_edge("Node3", "Node4")
+    G.add_edge("Node1", 2)
+    G.add_edge("Node1", "HelloWorld")
+    G.add_edge(2, 3)
+    G.add_edge(3, "Node4")
+    G.add_edge(":)", ":(")
+
+    return G, 9, 6
+
+
 def read_graph_as_edge_list(path):
     return Graph(path, Graph.READ_MOD_EDGE_LIST)
 

@@ -26,3 +26,8 @@ class NodeDoesNotExistException(Exception):
 class EdgeDoesNotExistException(Exception):
     def __init__(self, idx1, idx2):
         super().__init__(f"Edge between id {idx1} and {idx2} does not exist!")
+
+
+class InvalidNodeIdException(Exception):
+    def __init__(self, idx):
+        super().__init__(f"Bad Node id {idx}. Node id may not contain whitespaces!")

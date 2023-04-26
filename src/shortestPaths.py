@@ -6,6 +6,7 @@ import math
 
 
 def single_source_shortest_path(G: Graph, s):
+    s = str(s)
     if s not in G.node_ids_internal_ids:
         raise Exc.NodeDoesNotExistException(s)
     dist = {}
@@ -84,6 +85,8 @@ def check_collision(number_of_nodes, s_visited: list, t_visited: list):
 
 
 def shortest_s_t_path(G: Graph, s_id, t_id):
+    s_id = str(s_id)
+    t_id = str(t_id)
     node_ids = list(G.node_ids_internal_ids.keys())
     s = node_ids.index(s_id)
     t = node_ids.index(t_id)

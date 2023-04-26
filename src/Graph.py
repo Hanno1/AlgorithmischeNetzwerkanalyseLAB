@@ -56,6 +56,11 @@ class Graph:
             raise FileNotFoundError
 
     def read_graph_metis(self, path):
+        """
+        :param path: path there the metis file is saved
+
+        
+        """
         try:
             with open(path) as file:
                 first_line = file.readline()
@@ -137,6 +142,9 @@ class Graph:
         f.close()
 
     def add_node(self, idx):
+        idx = str(idx)
+        if len(idx.split(" ")) > 1:
+            raise Exc.InvalidNodeIdException(idx)
         if idx in self.node_ids_internal_ids:
             return
         internal_id = self.max_idx
@@ -150,6 +158,7 @@ class Graph:
         self.n += 1
 
     def remove_node(self, idx):
+        idx = str(idx)
         # remove node and all connections to other nodes
         if idx not in self.node_ids_internal_ids:
             raise Exc.NodeDoesNotExistException(idx)
@@ -167,12 +176,14 @@ class Graph:
         self.n -= 1
 
     def add_edge(self, id1, id2):
+        id1 = str(id1)
+        id2 = str(id2)
+        if id1 == id2:
+            raise ValueError(f"Nodes have to be different!")
         if id1 not in self.node_ids_internal_ids:
             self.add_node(id1)
         if id2 not in self.node_ids_internal_ids:
             self.add_node(id2)
-        if id1 == id2:
-            raise ValueError(f"Nodes have to be different!")
         # check if edge already exist
         if self.node_ids_internal_ids[id2] in self.edges[self.node_ids_internal_ids[id1]]:
             return
@@ -183,6 +194,8 @@ class Graph:
         self.m += 1
 
     def remove_edge(self, id1, id2):
+        id1 = str(id1)
+        id2 = str(id2)
         if id1 not in self.node_ids_internal_ids:
             raise Exc.NodeDoesNotExistException(id1)
         if id2 not in self.node_ids_internal_ids:
@@ -200,6 +213,8 @@ class Graph:
         self.m -= 1
 
     def test_neighbors(self, id1, id2):
+        id1 = str(id1)
+        id2 = str(id2)
         if id1 not in self.node_ids_internal_ids:
             raise Exc.NodeDoesNotExistException(id1)
         elif id2 not in self.node_ids_internal_ids:
@@ -212,6 +227,7 @@ class Graph:
         return False
 
     def get_neighbors(self, idx):
+        idx = str(idx)
         if idx in self.node_ids_internal_ids:
             internal_id = self.node_ids_internal_ids[idx]
             edges = self.edges[internal_id]
