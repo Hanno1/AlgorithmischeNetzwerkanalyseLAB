@@ -107,14 +107,14 @@ class Graph:
             print(f"No such file {path}")
             raise FileNotFoundError
 
-    def save_graph_as_edge_list(self, name):
+    def save_graph_as_edge_list(self, path):
         """
-        :param name: name or path there the file is stored. ending .txt gets appended automatically
+        :param path: name or path there the file is stored. ending .txt gets appended automatically
         """
         try:
-            f = open(name + ".txt", "x")
+            f = open(path + ".txt", "x")
         except FileExistsError:
-            f = open(name + ".txt", "w")
+            f = open(path + ".txt", "w")
         for key in self.edges:
             node_id = self.internal_ids_node_ids[key]
             value = self.edges[key]
@@ -124,17 +124,17 @@ class Graph:
                     f.write(f"{node_id} {node_id_connection}\n")
         f.close()
 
-    def save_graph_metis(self, name):
+    def save_graph_metis(self, path):
         """
         save Graph in metis format. since metis can only store node ids that are an integer, we create a new mapping
         that maps internal ids to integers (from 0 to n-1)
 
-        :param name: name or path there the file is stored. ending .txt gets appended automatically
+        :param path: name or path there the file is stored. ending .txt gets appended automatically
         """
         try:
-            f = open(name + ".txt", "x")
+            f = open(path + ".txt", "x")
         except FileExistsError:
-            f = open(name + ".txt", "w")
+            f = open(path + ".txt", "w")
 
         f.write(f"{self.n} {self.m}")
 
@@ -293,20 +293,21 @@ class Graph:
         raise Exc.NodeDoesNotExistException(internal_id)
 
     def get_node_degree(self, idx):
-        return len(self.get_neighbors(idx))
+        return len(self.get_internal_neighbors(self.node_ids_internal_ids[idx]))
 
     def print_nodes(self):
         s = ""
         for key in self.node_ids_internal_ids:
-            s += str(key) + " "
-        print(f"the Graph contains the following Nodes: {s}")
+            s += str(key) + ", "
+        print(f"the Graph contains the following Nodes: {s[:-2]}")
 
     def print_edges(self):
+        print("The Graph contains the following edges (Metis Format):")
         for key in self.edges:
             node_id = self.internal_ids_node_ids[key]
             tmp = f"{node_id}: "
             value = self.edges[key]
             for v in value:
                 node_id = self.internal_ids_node_ids[v]
-                tmp += str(node_id) + " "
-            print(tmp)
+                tmp += str(node_id) + ", "
+            print(tmp[:-2])

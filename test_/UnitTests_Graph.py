@@ -17,7 +17,7 @@ class TestGraph(TestCase):
         self.assertEqual(G.m, m-3)
         self.assertRaises(Exc.NodeDoesNotExistException, G.remove_node, 3)
 
-        # test text graph
+        # test_ text graph
         G, n, m = HelperClass.create_graph_text()
         G.remove_node("Node3")
         self.assertEqual(G.n, n-1)
@@ -32,7 +32,7 @@ class TestGraph(TestCase):
         self.assertEqual(G.m, m-1)
         self.assertRaises(Exc.EdgeDoesNotExistException, G.remove_edge, 5, 4)
 
-        # test text graph
+        # test_ text graph
         G, n, m = HelperClass.create_graph_text()
         G.remove_edge("Node3", "Node4")
         self.assertEqual(G.n, n)
@@ -56,7 +56,7 @@ class TestGraph(TestCase):
         G.remove_node(15)
         self.assertRaises(Exc.NodeDoesNotExistException, G.test_neighbors, -1, 15)
 
-        # test text graph
+        # test_ text graph
         G, n, m = HelperClass.create_graph_text()
         self.assertEqual(G.test_neighbors("Node1", "Node3"), False)
         self.assertEqual(G.test_neighbors("Node1", "2"), True)
@@ -74,7 +74,7 @@ class TestGraph(TestCase):
         self.assertEqual(G.get_neighbors(9), set())
         self.assertRaises(Exc.NodeDoesNotExistException, G.get_neighbors, 14)
 
-        # test text graph
+        # test_ text graph
         G, n, m = HelperClass.create_graph_text()
         self.assertEqual(G.get_neighbors("Node2"), set())
         self.assertEqual(G.get_neighbors("Node1"), {"HelloWorld", "2"})
@@ -90,7 +90,7 @@ class TestGraph(TestCase):
         self.assertEqual(G.get_node_degree(9), 0)
         self.assertRaises(Exc.NodeDoesNotExistException, G.get_node_degree, 14)
 
-        # test text graph
+        # test_ text graph
         G, n, m = HelperClass.create_graph_text()
         self.assertEqual(G.get_node_degree("Node1"), 2)
         self.assertEqual(G.get_node_degree(2), 2)
@@ -99,7 +99,7 @@ class TestGraph(TestCase):
 
     def test_save_graph_edge_list(self):
         G, n, m = HelperClass.create_graph()
-        G.save_graph_as_edge_list("test")
+        G.save_graph_as_edge_list("test_")
 
         with open("test.txt") as file:
             line = file.readline().replace("\n", "")
@@ -111,9 +111,9 @@ class TestGraph(TestCase):
             line = file.readline().replace("\n", "")
             self.assertEqual(line, "3 4")
 
-        # test text graph
+        # test_ text graph
         G, n, m = HelperClass.create_graph_text()
-        G.save_graph_as_edge_list("test")
+        G.save_graph_as_edge_list("test_")
 
         with open("test.txt") as file:
             line = file.readline().replace("\n", "")
@@ -129,15 +129,15 @@ class TestGraph(TestCase):
         G, n, m = HelperClass.create_graph()
         G.remove_node(0)
         G.add_edge(1, 10)
-        G.save_graph_as_edge_list("test")
+        G.save_graph_as_edge_list("test_")
         newG = HelperClass.read_graph_as_edge_list("test.txt")
 
         self.assertEqual(newG.n, n-4)
         self.assertEqual(newG.m, m)
 
-        # test text graph
+        # test_ text graph
         G, n, m = HelperClass.create_graph_text()
-        G.save_graph_as_edge_list("test")
+        G.save_graph_as_edge_list("test_")
         newG = HelperClass.read_graph_as_edge_list("test.txt")
 
         self.assertEqual(newG.n, n - 1)
@@ -145,7 +145,7 @@ class TestGraph(TestCase):
 
     def test_save_graph_metis(self):
         G, n, m = HelperClass.create_graph()
-        G.save_graph_metis("test")
+        G.save_graph_metis("test_")
 
         with open("test.txt") as file:
             line = file.readline().replace("\n", "")
@@ -157,9 +157,9 @@ class TestGraph(TestCase):
             line = file.readline().replace("\n", "")
             self.assertEqual(line, "3")
 
-        # test text graph
+        # test_ text graph
         G, n, m = HelperClass.create_graph_text()
-        G.save_graph_metis("test")
+        G.save_graph_metis("test_")
 
         with open("test.txt") as file:
             line = file.readline().replace("\n", "")
@@ -177,15 +177,15 @@ class TestGraph(TestCase):
         G.remove_node(0)
         G.add_edge(1, 10)
 
-        G.save_graph_metis("test")
+        G.save_graph_metis("test_")
         newG = HelperClass.read_graph_metis("test.txt")
 
         self.assertEqual(newG.n, n - 1)
         self.assertEqual(newG.m, m)
 
-        # test text graph
+        # test_ text graph
         G, n, m = HelperClass.create_graph_text()
-        G.save_graph_metis("test")
+        G.save_graph_metis("test_")
         newG = HelperClass.read_graph_metis("test.txt")
 
         self.assertEqual(newG.n, n)
