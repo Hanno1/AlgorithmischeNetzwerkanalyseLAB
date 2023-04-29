@@ -41,4 +41,5 @@ class TestShortestPaths(TestCase):
     def test_connected_components(self):
         G, n, m = HelperClass.create_graph()
 
-        self.assertEqual(sP.connected_components(G), [{'-1', '0'}, {'2', '3', '5', '1', '4'}, {'7', '6', '8'}, {'9'}, {'11', '12', '10', '13'}, {'15'}])
+        self.assertEqual(sP.connected_components(G), [{'-1', '0'}, {'2', '3', '5', '1', '4'}, {'7', '6', '8'}, {'9'},
+                                                      {'11', '12', '10', '13'}, {'15'}])
