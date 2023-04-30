@@ -1,6 +1,7 @@
 import src.shortestPaths as sP
 import HelperClass as HelperClass
 from unittest import TestCase
+import unittest
 import math
 
 
@@ -42,3 +43,6 @@ class TestShortestPaths(TestCase):
         G, n, m = HelperClass.create_graph()
 
         self.assertEqual(sP.connected_components(G), [{'-1', '0'}, {'2', '3', '5', '1', '4'}, {'7', '6', '8'}, {'9'}, {'11', '12', '10', '13'}, {'15'}])
+
+if __name__ == '__main__':
+    unittest.main()
