@@ -19,7 +19,7 @@ class TestShortestPaths(TestCase):
 
     def test_all_pair_shortest_path(self):
         G, n, m = HelperClass.create_graph()
-        dist = sP.all_pair_shortest_path(G)
+        dist = sP.all_pairs_shortest_path(G)
 
         self.assertEqual(dist["0"]["-1"], 1)
         self.assertEqual(dist["7"]["8"], 2)
