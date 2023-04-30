@@ -4,52 +4,70 @@ import multiprocessing
 import src.CustomExceptions as Exc
 import math
 
+__all__ = [
+    "single_source_shortest_path",
+    "all_pairs_shortest_path",
+    "shortest_s_t_path",
+    "connected_components"
+]
 
+#@lru_cache(maxsize=None)
 def single_source_shortest_path(G: Graph, s):
+    """
+    :param Graph: Graph object to analyse 
+    :param s: name of the Graph node for which shortest paths are computed 
+
+    calculates the length of the shortest path from node s to each node in the Graph.
+
+    returns: 
+    dictionary where keys are names of all nodes in the Graph and values
+    are corresponding distances (int). Non-reachable nodes have distance infinite
+
+    """
     s = str(s)
     if s not in G.node_ids_internal_ids:
         raise Exc.NodeDoesNotExistException(s)
     dist = {}
     for n in G.node_ids_internal_ids:
         dist[n] = math.inf
-    dist[s] = 0
+    dist[s]=0
 
     internal_s = G.node_ids_internal_ids[s]
-
-    queue = deque([internal_s])
     visited = {internal_s}
-    while queue:
-        u = queue.popleft()
-        external_u = G.internal_ids_node_ids[u]
-        for v in G.get_internal_neighbors(u):
-            if v not in visited:
-                visited.add(v)
-                queue.append(v)
+    next_level = [internal_s]
+    distance = 0
 
-                external_v = G.internal_ids_node_ids[v]
-                dist[external_v] = dist[external_u] + 1
+    # traverse each "distance level" seperately, making stack pop operations unnecessary
+    while next_level:
+        distance +=1
+        child_level = [] 
+        for u in next_level:
+            for v in G.get_internal_neighbors(u):
+                if v not in visited:
+                    visited.add(v)
+                    child_level.append(v)
+                    external_v = G.internal_ids_node_ids[v]
+                    dist[external_v] = distance
+                    if len(visited) == G.n:
+                        return dist
+        next_level = child_level
     return dist
 
-
-def all_pair_shortest_path(G: Graph):
-    dist = {}
+def _all_pairs_shortest_path_single(G: Graph):
+    dist={}
     for v in G.node_ids_internal_ids:
-        dist[v] = single_source_shortest_path(G, v)
+        dist[v]= single_source_shortest_path(G,v)
     return dist
 
-
-def _calc_shortest_paths(node_chunk, G):
+def _calc_shortest_paths(node_chunk, G: Graph):
     dist_chunk = {}
     for v in node_chunk:
-        v_id = G.nodes[v].id
-        dist_chunk[v_id] = single_source_shortest_path(G, v_id)
+        dist_chunk[v] = single_source_shortest_path(G, v)
     return dist_chunk
 
-
-def all_pair_shortest_path_parallel(G):
+def _all_pairs_shortest_path_parallel(G: Graph, num_processes: int):
     dist = {}
-    num_processes = multiprocessing.cpu_count()
-    nodes = list(G.nodes)
+    nodes = list(G.node_ids_internal_ids.keys())
     node_chunks = [nodes[i::num_processes] for i in range(num_processes)]
 
     # create a process pool and map the node chunks to worker processes
@@ -66,6 +84,28 @@ def all_pair_shortest_path_parallel(G):
 
     return dist
 
+def all_pairs_shortest_path(G: Graph):
+    """
+    :param Graph: Graph object to analyse 
+
+    Calculates the length of the shortest path for each pair of nodes in the Graph.
+    Parallelization depending on available cpu cores.
+
+    returns: 
+    dictionary of dictionaries where keys are names of all nodes in the Graph and values
+    are corresponding distances (int). Non-reachable nodes have distance infinite
+    {node_id1: {node_id1: 0, node_id2: dist12, ..., node_idN: dist1N},
+    node_id1: {node_id1: dist21, node_id2: 0, ..., node_idN: dist2N},
+    ...
+    node_idN: {node_id1: distN1, node_id2: distN2, ..., node_idN: 0}}
+
+    """
+    num_processes = multiprocessing.cpu_count()
+    if num_processes < 4:
+        return _all_pairs_shortest_path_single(G)
+    else:
+        return _all_pairs_shortest_path_parallel(G,num_processes)
+
 
 def breadth_first_search(G: Graph, node_IDs: list, visited: list, parent: list, queue: list):
     current_node = queue.pop(0)
@@ -75,7 +115,6 @@ def breadth_first_search(G: Graph, node_IDs: list, visited: list, parent: list, 
             visited[node] = True
             parent[node] = current_node
             queue.append(node)
-
 
 def check_collision(number_of_nodes, s_visited: list, t_visited: list):
     for i in range(number_of_nodes):
@@ -124,21 +163,28 @@ def shortest_s_t_path(G: Graph, s_id, t_id):
             return shortest_path, len(shortest_path) - 1
     return [], math.inf
 
-
 def connected_components(G: Graph):
+    """
+    :param Graph: Graph object to analyse 
+
+    determines the components the graph is composed of.
+
+    returns: 
+    a list of sets, each of which contains the nodes of a disjoint component.
+
+    """
     components = []
-    visited = []
+    visited = set()
 
     for i in G.node_ids_internal_ids.keys():
         if i in visited:
             continue
 
         component = set()
-        d = single_source_shortest_path(G, i)
-        for key in d:
-            value = d[key]
-            if value < math.inf:
-                component.add(key)
-                visited.append(key)
+        distances = single_source_shortest_path(G, i)
+        for node_id in distances:
+            if distances[node_id]< math.inf:
+                component.add(node_id)
+                visited.add(node_id)
         components.append(component)
     return components
