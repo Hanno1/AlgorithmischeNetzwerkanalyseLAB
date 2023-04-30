@@ -1,6 +1,7 @@
 from unittest import TestCase
 import HelperClass as HelperClass
 import src.CustomExceptions as Exc
+import unittest
 
 
 class TestGraph(TestCase):
@@ -190,3 +191,6 @@ class TestGraph(TestCase):
 
         self.assertEqual(newG.n, n)
         self.assertEqual(newG.m, m)
+
+if __name__ == '__main__':
+    unittest.main()
