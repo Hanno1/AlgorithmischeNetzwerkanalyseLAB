@@ -107,61 +107,85 @@ def all_pairs_shortest_path(G: Graph):
         return _all_pairs_shortest_path_parallel(G,num_processes)
 
 
-def breadth_first_search(G: Graph, node_IDs: list, visited: list, parent: list, queue: list):
-    current_node = queue.pop(0)
-    for node_id in G.get_neighbors(node_IDs[current_node]):
-        node = node_IDs.index(node_id)
-        if not visited[node]:
-            visited[node] = True
+def breadth_first_search(G: Graph, parent: dict, b_parent: dict, queue: deque):
+    '''Breadth-First-Search
+        Input:  Graph, Dictionary of the parents of discovered Nodes, Dictionary of discovered Nodes from the other search direction, Queue of Nodes from where to search
+
+        Looking from one active Node, all neighbors of that Node.
+        If the Neighbor was never visited, the parent node of that Node is the active node
+        New discovered Nodes will be taken in the queue.
+        If the active Node was already discovered by the other search direction, the Search has an Interception and will return the active Node as Intersection Node
+
+        Return the node where two directions of search meet. If there is no Interception, it will return -1
+    '''
+
+    current_node = queue.popleft()
+    for node in G.get_internal_neighbors(current_node):
+        if node not in parent:
             parent[node] = current_node
             queue.append(node)
-
-def check_collision(number_of_nodes, s_visited: list, t_visited: list):
-    for i in range(number_of_nodes):
-        if s_visited[i] and t_visited[i]:
-            return i
+        if node in b_parent:
+            return node
     return -1
 
-
 def shortest_s_t_path(G: Graph, s_id, t_id):
-    s_id = str(s_id)
-    t_id = str(t_id)
+    '''Bidirectional shortest path in G from source s_id to target t_id (bidirectional)
+        Input: Graph, Start node, End node
+
+        For both Start- and End node, a queue Nodes that need to be visited will be created
+        The short of both Queues will be the active Search Queue
+
+        If both Search-Directions find the same Node, there will be an Intersection
+        After that, the Search will stop and the Parent dictionary of both directions will be merged as the Final shortest Path
+
+        If Start node = End node, it will return a length of 0
+        If Start node and End node are not connected, it will return a length of inf
+
+        Returns: Paths as List and length of the shortest path
+    '''
+
+    if str(s_id) not in G.node_ids_internal_ids:
+        raise Exc.NodeDoesNotExistException(s_id)
+    if str(t_id) not in G.node_ids_internal_ids:
+        raise Exc.NodeDoesNotExistException(t_id)
+
+    if s_id == t_id:
+        return [str(s_id)], 0
+
     node_ids = list(G.node_ids_internal_ids.keys())
-    s = node_ids.index(s_id)
-    t = node_ids.index(t_id)
+
+    s = node_ids.index(str(s_id))
+    t = node_ids.index(str(t_id))
+
     shortest_path = []
 
-    s_visited = [False] * G.n
-    t_visited = [False] * G.n
+    s_queue = deque([s])
+    t_queue = deque([t])
 
-    s_queue = []
-    t_queue = []
-
-    s_parent = [-1] * G.n
-    t_parent = [-1] * G.n
-
-    s_visited[s] = True
-    s_queue.append(s)
-    t_visited[t] = True
-    t_queue.append(t)
+    s_parent = dict()
+    t_parent = dict()
+    s_parent[s] = -1
+    t_parent[t] = -1
 
     while s_queue and t_queue:
-        breadth_first_search(G, node_ids, s_visited, s_parent, s_queue)
-        breadth_first_search(G, node_ids, t_visited, t_parent, t_queue)
-        intersection = check_collision(G.n, s_visited, t_visited)
+        if len(s_queue) <= len(t_queue):
+            intersection = breadth_first_search(G, s_parent, t_parent, s_queue)
+        else:
+            intersection = breadth_first_search(G, t_parent, s_parent, t_queue)
         if intersection != -1:
             i = intersection
-            shortest_path.append(node_ids[i])
+            shortest_path.append(G.internal_ids_node_ids[i])
             while i != s:
-                shortest_path.append(node_ids[s_parent[i]])
+                shortest_path.append(G.internal_ids_node_ids[s_parent[i]])
                 i = s_parent[i]
             shortest_path.reverse()
             i = intersection
             while i != t:
-                shortest_path.append(node_ids[t_parent[i]])
+                shortest_path.append(G.internal_ids_node_ids[t_parent[i]])
                 i = t_parent[i]
             return shortest_path, len(shortest_path) - 1
     return [], math.inf
+
 
 def connected_components(G: Graph):
     """
