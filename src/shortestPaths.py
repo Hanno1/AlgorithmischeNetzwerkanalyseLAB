@@ -116,6 +116,7 @@ def breadth_first_search(G: Graph, node_IDs: list, visited: list, parent: list, 
             parent[node] = current_node
             queue.append(node)
 
+
 def check_collision(number_of_nodes, s_visited: list, t_visited: list):
     for i in range(number_of_nodes):
         if s_visited[i] and t_visited[i]:
