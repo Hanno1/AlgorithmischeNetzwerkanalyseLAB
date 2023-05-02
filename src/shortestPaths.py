@@ -11,11 +11,12 @@ __all__ = [
     "connected_components"
 ]
 
-#@lru_cache(maxsize=None)
+
+# @lru_cache(maxsize=None)
 def single_source_shortest_path(G: Graph, s):
     """
-    :param Graph: Graph object to analyse 
-    :param s: name of the Graph node for which shortest paths are computed 
+    :param G:
+    :param s: name of the Graph node for which shortest paths are computed
 
     calculates the length of the shortest path from node s to each node in the Graph.
 
@@ -30,7 +31,7 @@ def single_source_shortest_path(G: Graph, s):
     dist = {}
     for n in G.node_ids_internal_ids:
         dist[n] = math.inf
-    dist[s]=0
+    dist[s] = 0
 
     internal_s = G.node_ids_internal_ids[s]
     visited = {internal_s}
@@ -39,8 +40,8 @@ def single_source_shortest_path(G: Graph, s):
 
     # traverse each "distance level" seperately, making stack pop operations unnecessary
     while next_level:
-        distance +=1
-        child_level = [] 
+        distance += 1
+        child_level = []
         for u in next_level:
             for v in G.get_internal_neighbors(u):
                 if v not in visited:
@@ -53,17 +54,20 @@ def single_source_shortest_path(G: Graph, s):
         next_level = child_level
     return dist
 
+
 def _all_pairs_shortest_path_single(G: Graph):
-    dist={}
+    dist = {}
     for v in G.node_ids_internal_ids:
-        dist[v]= single_source_shortest_path(G,v)
+        dist[v] = single_source_shortest_path(G, v)
     return dist
+
 
 def _calc_shortest_paths(node_chunk, G: Graph):
     dist_chunk = {}
     for v in node_chunk:
         dist_chunk[v] = single_source_shortest_path(G, v)
     return dist_chunk
+
 
 def _all_pairs_shortest_path_parallel(G: Graph, num_processes: int):
     dist = {}
@@ -84,10 +88,10 @@ def _all_pairs_shortest_path_parallel(G: Graph, num_processes: int):
 
     return dist
 
+
 def all_pairs_shortest_path(G: Graph):
     """
-    :param Graph: Graph object to analyse 
-
+    :param G: Graph
     Calculates the length of the shortest path for each pair of nodes in the Graph.
     Parallelization depending on available cpu cores.
 
@@ -98,60 +102,53 @@ def all_pairs_shortest_path(G: Graph):
     node_id1: {node_id1: dist21, node_id2: 0, ..., node_idN: dist2N},
     ...
     node_idN: {node_id1: distN1, node_id2: distN2, ..., node_idN: 0}}
-
     """
     num_processes = multiprocessing.cpu_count()
     if num_processes < 4:
         return _all_pairs_shortest_path_single(G)
     else:
-        return _all_pairs_shortest_path_parallel(G,num_processes)
+        return _all_pairs_shortest_path_parallel(G, num_processes)
 
 
 def breadth_first_search(G: Graph, parent: dict, b_parent: dict, queue: deque):
-    '''Breadth-First-Search
-        Input:  Graph, Dictionary of the parents of discovered Nodes, Dictionary of discovered Nodes from the other search direction, Queue of Nodes from where to search
+    """
+    Breadth-First-Search
+    Input:  Graph, Dictionary of the parents of discovered Nodes, Dictionary of discovered Nodes from the other search direction, Queue of Nodes from where to search
 
-        Looking from one active Node, all neighbors of that Node.
-        If the Neighbor was never visited, the parent node of that Node is the active node
-        New discovered Nodes will be taken in the queue.
-        If the active Node was already discovered by the other search direction, the Search has an Interception and will return the active Node as Intersection Node
+    Looking from one active Node, all neighbors of that Node.
+    If the Neighbor was never visited, the parent node of that Node is the active node
+    New discovered Nodes will be taken in the queue.
+    If the active Node was already discovered by the other search direction, the Search has an Interception and will return the active Node as Intersection Node
 
-        Return the node where two directions of search meet. If there is no Interception, it will return -1
-    '''
+    Return the node where two directions of search meet. If there is no Interception, it will return -1
+    """
 
     current_node = queue.popleft()
     for node in G.get_internal_neighbors(current_node):
         if node not in parent:
             parent[node] = current_node
             queue.append(node)
-<<<<<<< HEAD
-
-
-def check_collision(number_of_nodes, s_visited: list, t_visited: list):
-    for i in range(number_of_nodes):
-        if s_visited[i] and t_visited[i]:
-            return i
-=======
         if node in b_parent:
             return node
->>>>>>> origin/nils
     return -1
 
+
 def shortest_s_t_path(G: Graph, s_id, t_id):
-    '''Bidirectional shortest path in G from source s_id to target t_id (bidirectional)
-        Input: Graph, Start node, End node
+    """
+    Bidirectional shortest path in G from source s_id to target t_id (bidirectional)
+    Input: Graph, Start node, End node
 
-        For both Start- and End node, a queue Nodes that need to be visited will be created
-        The short of both Queues will be the active Search Queue
+    For both Start- and End node, a queue Nodes that need to be visited will be created
+    The short of both Queues will be the active Search Queue
 
-        If both Search-Directions find the same Node, there will be an Intersection
-        After that, the Search will stop and the Parent dictionary of both directions will be merged as the Final shortest Path
+    If both Search-Directions find the same Node, there will be an Intersection
+    After that, the Search will stop and the Parent dictionary of both directions will be merged as the Final shortest Path
 
-        If Start node = End node, it will return a length of 0
-        If Start node and End node are not connected, it will return a length of inf
+    If Start node = End node, it will return a length of 0
+    If Start node and End node are not connected, it will return a length of inf
 
-        Returns: Paths as List and length of the shortest path
-    '''
+    Returns: Paths as List and length of the shortest path
+    """
 
     if str(s_id) not in G.node_ids_internal_ids:
         raise Exc.NodeDoesNotExistException(s_id)
@@ -198,8 +195,6 @@ def shortest_s_t_path(G: Graph, s_id, t_id):
 
 def connected_components(G: Graph):
     """
-    :param Graph: Graph object to analyse 
-
     determines the components the graph is composed of.
 
     returns: 
@@ -216,7 +211,7 @@ def connected_components(G: Graph):
         component = set()
         distances = single_source_shortest_path(G, i)
         for node_id in distances:
-            if distances[node_id]< math.inf:
+            if distances[node_id] < math.inf:
                 component.add(node_id)
                 visited.add(node_id)
         components.append(component)
