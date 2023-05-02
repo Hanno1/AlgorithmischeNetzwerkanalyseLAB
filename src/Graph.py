@@ -70,20 +70,20 @@ class Graph:
                 # global line number encodes the real line in the file we read. It will count comment lines.
                 # code_number wont count comment lines
                 global_line_number: int = 0
-                code_number: int = 0
+                code_number: int = 1
                 while not first_line or first_line[0] == "%" or first_line[0] == "#":
                     global_line_number += 1
                     if not first_line:
                         raise Exc.EmptyLineException(global_line_number)
                     first_line = file.readline()
-                split = first_line.split(" ")
+                split = first_line.split()
                 n, m = int(split[0]), int(split[1])
-                for idx in range(0, n):
+                for idx in range(1, n + 1):
                     self.add_node(idx)
                 for line in file:
                     line = line.replace("\n", "")
                     if not line:
-                        if code_number > n-1:
+                        if code_number > n:
                             raise Exc.TooManyLinesException(global_line_number, line)
                         global_line_number += 1
                         code_number += 1
@@ -91,11 +91,11 @@ class Graph:
                     if line[0] == "%" or line[0] == "#":
                         global_line_number += 1
                         continue
-                    if code_number > n-1:
+                    if code_number > n:
                         raise Exc.TooManyLinesException(global_line_number, line)
-                    split = line.split(" ")
+                    split = line.split()
                     for connection in split:
-                        if int(connection) > n-1:
+                        if int(connection) > n:
                             raise Exc.BadNodeIdException(global_line_number, connection, n)
                         self.add_edge(code_number, int(connection))
                     code_number += 1
@@ -140,7 +140,7 @@ class Graph:
 
         # create new mapping
         new_internal_mapping = dict()
-        counter = 0
+        counter = 1
         for key in self.internal_ids_node_ids:
             new_internal_mapping[key] = counter
             counter += 1
@@ -293,7 +293,10 @@ class Graph:
         raise Exc.NodeDoesNotExistException(internal_id)
 
     def get_node_degree(self, idx):
-        return len(self.get_internal_neighbors(self.node_ids_internal_ids[idx]))
+        idx = str(idx)
+        if idx in self.node_ids_internal_ids:
+            return len(self.edges[self.node_ids_internal_ids[idx]])
+        raise Exc.NodeDoesNotExistException(idx)
 
     def print_nodes(self):
         s = ""

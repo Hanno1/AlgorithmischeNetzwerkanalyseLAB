@@ -100,7 +100,7 @@ class TestGraph(TestCase):
 
     def test_save_graph_edge_list(self):
         G, n, m = HelperClass.create_graph()
-        G.save_graph_as_edge_list("test_")
+        G.save_graph_as_edge_list("test")
 
         with open("test.txt") as file:
             line = file.readline().replace("\n", "")
@@ -114,7 +114,7 @@ class TestGraph(TestCase):
 
         # test_ text graph
         G, n, m = HelperClass.create_graph_text()
-        G.save_graph_as_edge_list("test_")
+        G.save_graph_as_edge_list("test")
 
         with open("test.txt") as file:
             line = file.readline().replace("\n", "")
@@ -130,7 +130,7 @@ class TestGraph(TestCase):
         G, n, m = HelperClass.create_graph()
         G.remove_node(0)
         G.add_edge(1, 10)
-        G.save_graph_as_edge_list("test_")
+        G.save_graph_as_edge_list("test")
         newG = HelperClass.read_graph_as_edge_list("test.txt")
 
         self.assertEqual(newG.n, n-4)
@@ -138,7 +138,7 @@ class TestGraph(TestCase):
 
         # test_ text graph
         G, n, m = HelperClass.create_graph_text()
-        G.save_graph_as_edge_list("test_")
+        G.save_graph_as_edge_list("test")
         newG = HelperClass.read_graph_as_edge_list("test.txt")
 
         self.assertEqual(newG.n, n - 1)
@@ -146,31 +146,31 @@ class TestGraph(TestCase):
 
     def test_save_graph_metis(self):
         G, n, m = HelperClass.create_graph()
-        G.save_graph_metis("test_")
+        G.save_graph_metis("test")
 
         with open("test.txt") as file:
             line = file.readline().replace("\n", "")
             self.assertEqual(line, f"{n} {m}")
             line = file.readline().replace("\n", "")
+            self.assertEqual(line, "2")
+            line = file.readline().replace("\n", "")
             self.assertEqual(line, "1")
             line = file.readline().replace("\n", "")
-            self.assertEqual(line, "0")
-            line = file.readline().replace("\n", "")
-            self.assertEqual(line, "3")
+            self.assertEqual(line, "4")
 
         # test_ text graph
         G, n, m = HelperClass.create_graph_text()
-        G.save_graph_metis("test_")
+        G.save_graph_metis("test")
 
         with open("test.txt") as file:
             line = file.readline().replace("\n", "")
             self.assertEqual(line, "9 6")
             line = file.readline().replace("\n", "")
-            self.assertEqual(line, "4 5")
+            self.assertEqual(line, "5 6")
             line = file.readline().replace("\n", "")
             self.assertEqual(line, "")
             line = file.readline().replace("\n", "")
-            self.assertEqual(line, "3")
+            self.assertEqual(line, "4")
 
     def test_read_graph_metis(self):
         G, n, m = HelperClass.create_graph()
@@ -178,7 +178,7 @@ class TestGraph(TestCase):
         G.remove_node(0)
         G.add_edge(1, 10)
 
-        G.save_graph_metis("test_")
+        G.save_graph_metis("test")
         newG = HelperClass.read_graph_metis("test.txt")
 
         self.assertEqual(newG.n, n - 1)
@@ -186,11 +186,12 @@ class TestGraph(TestCase):
 
         # test_ text graph
         G, n, m = HelperClass.create_graph_text()
-        G.save_graph_metis("test_")
+        G.save_graph_metis("test")
         newG = HelperClass.read_graph_metis("test.txt")
 
         self.assertEqual(newG.n, n)
         self.assertEqual(newG.m, m)
+
 
 if __name__ == '__main__':
     unittest.main()
