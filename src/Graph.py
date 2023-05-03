@@ -18,7 +18,7 @@ class Graph:
         self.n = 0
         self.m = 0
 
-        self.max_internal_idx = 0
+        self.max_internal_id = 0
         self.node_ids_internal_ids = dict()
         self.internal_ids_node_ids = dict()
 
@@ -168,13 +168,13 @@ class Graph:
             raise Exc.InvalidNodeIdException(idx)
         if idx in self.node_ids_internal_ids:
             return
-        internal_id = self.max_internal_idx
+        internal_id = self.max_internal_id
 
         self.edges[internal_id] = set()
 
         self.node_ids_internal_ids[idx] = internal_id
         self.internal_ids_node_ids[internal_id] = idx
-        self.max_internal_idx += 1
+        self.max_internal_id += 1
         self.n += 1
 
     def remove_node(self, idx):
