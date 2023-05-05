@@ -33,6 +33,9 @@ class Graph:
     def get_nodes(self):
         return set(self.node_ids_internal_ids.keys())
 
+    def get_internal_nodes(self):
+        return set(self.internal_ids_node_ids.keys())
+
     def read_graph_as_edge_list(self, path):
         """
         read Graph as a edge list. meaning lines in the file have the form "1 2"...
@@ -265,6 +268,9 @@ class Graph:
 
         internal_id1 = self.node_ids_internal_ids[id1]
         internal_id2 = self.node_ids_internal_ids[id2]
+        return self.test_internal_neighbors(internal_id1, internal_id2)
+
+    def test_internal_neighbors(self, internal_id1, internal_id2):
         if internal_id1 in self.edges[internal_id2]:
             return True
         return False
