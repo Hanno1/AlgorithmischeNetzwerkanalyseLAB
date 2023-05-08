@@ -3,6 +3,7 @@ from src.Graph import Graph
 import multiprocessing
 import src.CustomExceptions as Exc
 import math
+import numpy as np
 
 __all__ = [
     "single_source_shortest_path",
@@ -103,7 +104,8 @@ def all_pairs_shortest_path(G: Graph):
     ...
     node_idN: {node_id1: distN1, node_id2: distN2, ..., node_idN: 0}}
     """
-    num_processes = multiprocessing.cpu_count()
+    num_processes = 3
+    #num_processes = multiprocessing.cpu_count()
     if num_processes < 4:
         return _all_pairs_shortest_path_single(G)
     else:
@@ -216,3 +218,67 @@ def connected_components(G: Graph):
                 visited.add(node_id)
         components.append(component)
     return components
+
+def diameter(G: Graph):
+    diameter = -math.inf
+    apsp = all_pairs_shortest_path(G)
+    for node1 in apsp:
+        for node2 in apsp[node1]:
+            if apsp[node1][node2] != math.inf and apsp[node1][node2] > diameter:
+                diameter = apsp[node1][node2]
+    return diameter
+
+def breadth_first_search_tree(G: Graph,s_id):
+    node_ids = list(G.node_ids_internal_ids.keys())
+    s = node_ids.index(str(s_id))
+
+    time = 0
+    parent = {}
+    visitied = set()
+    s_stack = {s:None}
+    low = {}
+    disc = {}
+    children = {}
+    while s_stack:
+        current_node = s_stack.popitem()
+        parent[current_node[0]] = current_node[1]
+        current_node = current_node[0]
+
+        if current_node not in visitied:
+            children[current_node] = children[current_node] + 1
+            low[current_node] = time
+            disc[current_node] = time
+            time = time + 1
+            visitied.add(current_node)
+            low[parent[current_node]] = min(low[parent[current_node]],low[current_node])
+            for node in G.get_internal_neighbors(current_node):
+                if node not in visitied:
+                    s_stack[node] = current_node
+        elif(parent[parent[current_node]] != current_node):
+            low[parent[current_node]] = min(parent[current_node],disc[current_node])
+    return parent
+
+def find_cut_nodes(G: Graph,s,distance):
+    """
+    :param G:
+
+    Finds the Nodes that when they get deletet will create two new connected components. It will be find with Deep First Search
+
+    :return: List of Cut-Nodes
+    """
+    bfst = breadth_first_search_tree(G,list(G.get_nodes())[0])
+    visited = set()
+    depth = {s:distance}
+    low = {s:distance}
+
+    for node in G.get_internal_neighbors(s):
+        if node not in visited:
+            find_cut_nodes(G,node,distance+1)
+        low[s] = min(low[s],low[node])
+        if low[node] >= depth[s]:
+            if bfst[s] != None or len([i for i in bfst if i[1] == node]):
+                print(s, " is a articulation point")
+
+
+
+
