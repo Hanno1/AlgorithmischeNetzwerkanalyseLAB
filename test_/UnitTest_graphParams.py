@@ -48,9 +48,18 @@ class TestShortestPaths(TestCase):
         G.add_edge(10,7)
         G.add_edge(8,7)
         G.add_edge(10,8)
-        self.assertEqual(gP.degeneracy(G), 3)
-    
+        degeneracy, degeneracy_order = gP.degeneracy(G)
+        self.assertEqual(degeneracy, 3)
 
+        for n in degeneracy_order:
+            if G.get_node_degree(n) <= degeneracy:
+                continue
+            n_index = degeneracy_order.index(n)
+            neighb_higher_order = 0
+            for nn in G.get_neighbors(n):
+                if degeneracy_order.index(nn) > n_index:
+                    neighb_higher_order += 1
+            self.assertGreaterEqual(degeneracy,neighb_higher_order)
 
 if __name__ == '__main__':
     unittest.main()
