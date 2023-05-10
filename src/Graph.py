@@ -1,4 +1,7 @@
+import sys
+
 import src.CustomExceptions as Exc
+import numpy as np
 
 
 class Graph:
@@ -29,6 +32,10 @@ class Graph:
                 self.read_graph_metis(path)
             else:
                 print(f"Unknown mode for reading a file {mode}")
+
+    def generate_nodes(self):
+        for key in self.node_ids_internal_ids:
+            yield key
 
     def get_nodes(self):
         return set(self.node_ids_internal_ids.keys())
@@ -167,7 +174,7 @@ class Graph:
         :param idx: name or index of the node
         """
         idx = str(idx)
-        if len(idx.split(" ")) > 1:
+        if len(idx.split()) > 1:
             raise Exc.InvalidNodeIdException(idx)
         if idx in self.node_ids_internal_ids:
             return
@@ -303,6 +310,22 @@ class Graph:
         if idx in self.node_ids_internal_ids:
             return len(self.edges[self.node_ids_internal_ids[idx]])
         raise Exc.NodeDoesNotExistException(idx)
+
+    def get_adjacency_matrix(self):
+        mat = np.zeros((self.n, self.n))
+        new_mapping = dict()
+        new_mapping_back = dict()
+        counter = 0
+        for key in self.node_ids_internal_ids:
+            new_mapping[key] = counter
+            new_mapping_back[counter] = key
+            counter += 1
+        for row_counter in range(len(mat)):
+            neighbors = self.get_neighbors(new_mapping_back[row_counter])
+            for neighbor in neighbors:
+                n = new_mapping[neighbor]
+                mat[row_counter][n] = 1
+        return mat, new_mapping, new_mapping_back
 
     def print_nodes(self):
         s = ""

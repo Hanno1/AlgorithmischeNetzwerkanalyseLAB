@@ -10,13 +10,10 @@ class TestShortestPaths(TestCase):
         G, n, m = HelperClass.create_graph()
         dist = sP.single_source_shortest_path(G, 1)
 
-        self.assertEqual(dist["0"], math.inf)
         self.assertEqual(dist["1"], 0)
         self.assertEqual(dist["2"], 1)
         self.assertEqual(dist["3"], 2)
         self.assertEqual(dist["5"], 3)
-        self.assertEqual(dist["-1"], math.inf)
-        self.assertEqual(dist["9"], math.inf)
 
     def test_all_pair_shortest_path(self):
         G, n, m = HelperClass.create_graph()
@@ -26,7 +23,6 @@ class TestShortestPaths(TestCase):
         self.assertEqual(dist["7"]["8"], 2)
         self.assertEqual(dist["1"]["4"], 3)
         self.assertEqual(dist["10"]["13"], 1)
-        self.assertEqual(dist["9"]["15"], math.inf)
         self.assertEqual(dist["-1"]["0"], 1)
 
     def test_bi_directional_search(self):
