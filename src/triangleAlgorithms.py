@@ -1,4 +1,5 @@
 import copy
+from numpy.linalg import matrix_power
 
 from src.Graph import Graph
 
@@ -152,15 +153,12 @@ def algorithm_edge_iterator(G: Graph):
 
 
 def algorithm_triangle_counter_ayz(G: Graph, gamma):
-    print(f"Gamma {gamma}")
     V_low = []
     V_high = []
-    V_high_internal_ids = []
 
     beta = G.m**((gamma - 1) / (gamma + 1))
     tri_counter = dict()
-
-    print(beta)
+    sum_of_triangles = 0
 
     for v in G.node_ids_internal_ids:
         tri_counter[v] = 0
@@ -169,7 +167,6 @@ def algorithm_triangle_counter_ayz(G: Graph, gamma):
             V_low.append(v)
         else:
             V_high.append(v)
-            V_high_internal_ids.append(G.node_ids_internal_ids[v])
     for v in V_low:
         neighbors = list(G.get_neighbors(v))
         for i in range(len(neighbors)-1):
@@ -181,21 +178,33 @@ def algorithm_triangle_counter_ayz(G: Graph, gamma):
                         tri_counter[v] += 1/3
                         tri_counter[node_i] += 1/3
                         tri_counter[node_j] += 1/3
+                        sum_of_triangles += 1 / 3
                     elif node_i in V_high and node_j in V_high:
                         tri_counter[v] += 1
                         tri_counter[node_i] += 1
                         tri_counter[node_j] += 1
+                        sum_of_triangles += 1
                     else:
                         tri_counter[v] += 1 / 2
                         tri_counter[node_i] += 1 / 2
                         tri_counter[node_j] += 1 / 2
-
-    print(tri_counter)
-
+                        sum_of_triangles += 1 / 2
     A = Graph()
-
-    edge_list = G.edges
     for v in V_high:
         A.add_node(v)
-        internal_v = G.node_ids_internal_ids[v]
+        neighbors = G.get_neighbors(v)
+        for neighbor in neighbors:
+            if neighbor in V_high:
+                A.add_edge(v, neighbor)
+
+    mat, m1, m2 = A.get_adjacency_matrix()
+    A_3 = matrix_power(mat, 3)
+
+    for v in V_high:
+        tri_counter[v] += A_3[m1[v]][m1[v]] / 2
+        sum_of_triangles += A_3[m1[v]][m1[v]] / 2
+
+    print("Hello World")
+
+    return round(sum_of_triangles), tri_counter
 
