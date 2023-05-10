@@ -1,8 +1,10 @@
+import random
 from collections import deque
 from src.Graph import Graph
 import multiprocessing
 import src.CustomExceptions as Exc
 import math
+import random
 import numpy as np
 
 __all__ = [
@@ -228,37 +230,8 @@ def diameter(G: Graph):
                 diameter = apsp[node1][node2]
     return diameter
 
-def breadth_first_search_tree(G: Graph,s_id):
-    node_ids = list(G.node_ids_internal_ids.keys())
-    s = node_ids.index(str(s_id))
 
-    time = 0
-    parent = {}
-    visitied = set()
-    s_stack = {s:None}
-    low = {}
-    disc = {}
-    children = {}
-    while s_stack:
-        current_node = s_stack.popitem()
-        parent[current_node[0]] = current_node[1]
-        current_node = current_node[0]
-
-        if current_node not in visitied:
-            children[current_node] = children[current_node] + 1
-            low[current_node] = time
-            disc[current_node] = time
-            time = time + 1
-            visitied.add(current_node)
-            low[parent[current_node]] = min(low[parent[current_node]],low[current_node])
-            for node in G.get_internal_neighbors(current_node):
-                if node not in visitied:
-                    s_stack[node] = current_node
-        elif(parent[parent[current_node]] != current_node):
-            low[parent[current_node]] = min(parent[current_node],disc[current_node])
-    return parent
-
-def find_cut_nodes(G: Graph,s,distance):
+def breadth_first_search_tree(G: Graph,s,disc,low,time,parent,cut_nodes):
     """
     :param G:
 
@@ -266,19 +239,106 @@ def find_cut_nodes(G: Graph,s,distance):
 
     :return: List of Cut-Nodes
     """
-    bfst = breadth_first_search_tree(G,list(G.get_nodes())[0])
-    visited = set()
-    depth = {s:distance}
-    low = {s:distance}
+
+    low[s] = time;disc[s] = time
+    time = time+1
+    children = 0
 
     for node in G.get_internal_neighbors(s):
-        if node not in visited:
-            find_cut_nodes(G,node,distance+1)
-        low[s] = min(low[s],low[node])
-        if low[node] >= depth[s]:
-            if bfst[s] != None or len([i for i in bfst if i[1] == node]):
-                print(s, " is a articulation point")
+        if node not in disc:
+            children = children+1
+            parent[node] = s
+            breadth_first_search_tree(G,node,disc,low,time,parent,cut_nodes)
+            low[s] = min(low[s],low[node])
 
+            if s not in parent and children >1:
+                cut_nodes.add(s)
+            if s in parent and parent[s] != None and low[node]>=disc[s]:
+                cut_nodes.add(s)
+        elif(node != parent[s]):
+            low[s] = min(low[s],disc[node])
 
+def find_cut_nodes(G: Graph):
+    s_id =  random.sample(G.get_nodes(),1)[0]              #Der Startknoten ist vllt entscheidend
+    node_ids = list(G.node_ids_internal_ids.keys())
+    s = node_ids.index(str(s_id))
 
+    time = 0
+    disc = {}; low = {}; parent = {s:None}; cut_nodes = set()
+    breadth_first_search_tree(G,s,disc,low,time,parent,cut_nodes)
+    return cut_nodes
 
+def not_to_visit_neighbors_subset_nodes(G: Graph):
+    node_not_to_visit = set()
+    same_distance = dict()
+    for v in G.internal_ids_node_ids:
+        v_neighbors = G.get_internal_neighbors(v)
+        u_set = set()
+        for u in G.internal_ids_node_ids:
+            if v != u:
+                u_neighbors = G.get_internal_neighbors(u)
+                if v_neighbors == u_neighbors and v_neighbors != set() and u_neighbors != set():
+                    same_distance[v] = u
+                if u_neighbors <= v_neighbors and v_neighbors != set() and u_neighbors != set():
+                    u_set.add(u)
+        if len(node_not_to_visit & u_set) == 0 and len(u_set) != 0:
+            node_not_to_visit.add(v)
+    return node_not_to_visit,same_distance
+
+def single_source_shortest_path_opt(G: Graph, s, nodes_not_to_visit, same_distance):
+    """
+    :param G:
+    :param s: name of the Graph node for which shortest paths are computed
+
+    calculates the length of the shortest path from node s to each node in the Graph.
+
+    returns:
+    dictionary where keys are names of all nodes in the Graph and values
+    are corresponding distances (int). Non-reachable nodes have distance infinite
+
+    """
+    s = str(s)
+    if s not in G.node_ids_internal_ids:
+        raise Exc.NodeDoesNotExistException(s)
+    dist = {s: 0}
+
+    internal_s = G.node_ids_internal_ids[s]
+    visited = {internal_s}.union(nodes_not_to_visit)
+    next_level = [internal_s]
+    distance = 0
+
+    # traverse each "distance level" seperately, making stack pop operations unnecessary
+    while next_level:
+        distance += 1
+        child_level = []
+        for u in next_level:
+            for v in G.get_internal_neighbors(u):
+                if v not in visited:
+                    visited.add(v)
+                    child_level.append(v)
+                    if v in same_distance.keys():
+                        u_same_distance = same_distance[v]
+                        if u_same_distance not in visited:
+                            visited.add(u_same_distance)
+                            external_v = G.internal_ids_node_ids[u_same_distance]
+                            dist[external_v] = distance
+                    external_v = G.internal_ids_node_ids[v]
+                    dist[external_v] = distance
+                    if len(visited) == G.n:
+                        return dist
+        next_level = child_level
+    return dist
+
+def all_pairs_shortest_path_opt(G: Graph, nodes_not_to_visit, same_distance, cut_nodes):
+    dist = {}
+    all_nodes = set(G.node_ids_internal_ids.values()).difference(cut_nodes)
+    for v in all_nodes:
+        dist[v] = single_source_shortest_path_opt(G, v,nodes_not_to_visit,same_distance)
+    return dist
+
+    no_start_nodes = find_cut_nodes(G)
+    node_not_to_visit = not_to_visit_neighbors_subset_nodes(G)
+    print(no_start_nodes)
+    print(type(no_start_nodes))
+    print(type(node_not_to_visit))
+    print(node_not_to_visit)
