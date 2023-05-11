@@ -292,6 +292,16 @@ class Graph:
             return self.edges[internal_id]
         raise Exc.NodeDoesNotExistException(internal_id)
 
+    def get_internal_grand_neighbors(self, internal_id):
+        grand_neighbors = set()
+        if internal_id in self.internal_ids_node_ids:
+            for neighbor in self.edges[internal_id]:
+                internal_id_neighbors = self.get_internal_neighbors(neighbor).difference({internal_id})
+                if internal_id_neighbors not in grand_neighbors:
+                    grand_neighbors.update(internal_id_neighbors)
+            return grand_neighbors
+        raise Exc.NodeDoesNotExistException(internal_id)
+
     def get_node_degree(self, idx):
         idx = str(idx)
         if idx in self.node_ids_internal_ids:

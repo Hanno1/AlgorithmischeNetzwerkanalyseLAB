@@ -271,9 +271,10 @@ def find_cut_nodes(G: Graph):
 def not_to_visit_neighbors_subset_nodes(G: Graph):
     node_not_to_visit = set()
     same_distance = dict()
+    u_set = set()
     for v in G.internal_ids_node_ids:
         v_neighbors = G.get_internal_neighbors(v)
-        u_set = set()
+
         for u in G.internal_ids_node_ids:
             if v != u:
                 u_neighbors = G.get_internal_neighbors(u)
@@ -281,8 +282,41 @@ def not_to_visit_neighbors_subset_nodes(G: Graph):
                     same_distance[v] = u
                 if u_neighbors <= v_neighbors and v_neighbors != set() and u_neighbors != set():
                     u_set.add(u)
+
         if len(node_not_to_visit & u_set) == 0 and len(u_set) != 0:
             node_not_to_visit.add(v)
+    return node_not_to_visit,same_distance
+
+def not_to_visit_neighbors_subset_nodes_2(G: Graph):
+    node_not_to_visit = set()
+    same_distance = dict()
+
+    #Hashen der einzelen Nachtbarschaftssummen auf eine Zahl Wenn der gleich Hash dann sind die Mengen gleich
+    #Wenn der Kontengrad von Konten v > 1 ist und ein Nachtbar u einen Kontengrad u = 1 hat dann brauch von v keine Breitensuche gemacht werden
+    #Nachteilmengenknoten muss nur in der Großelternnachtbarschaft nachgeschaut werden
+    #Bei shortest Path gilt d_min kleiner gleich 2 mal d von random konten v
+
+    #Hashen gleicher Nachtbarschaft: O(E)
+    hash_map = dict()
+    for v in G.internal_ids_node_ids:
+        v_neighbors = G.get_internal_neighbors(v)
+        v_degree = len(v_neighbors)
+
+        v_neighbors_hash = hash(sum([pow(i, 2) for i in v_neighbors]))
+        if v_neighbors_hash not in hash_map:
+            hash_map[v_neighbors_hash] = v
+        else:
+            same_distance[v] = hash_map[v_neighbors_hash]   #Was ist wenn mehrere Nachtbarn den selebn Hash als nur zwei
+        if v_degree != 1:
+            for u in G.get_internal_grand_neighbors(v):       #Der aufwand nochmal alle neigbors zu holen könnte zu groß sein
+                u_neighbors = G.get_internal_neighbors(u)
+                if len(u_neighbors) != 1 and u_neighbors <= v_neighbors: #Der Teilmengenverlgeich brauch lange
+                    node_not_to_visit.add(v)
+                else:
+                    node_not_to_visit.add(v)
+        elif G.get_node_degree(G.internal_ids_node_ids[list(v_neighbors)[0]]) > 1: #Nicht sehr effektiv das erst in eine Liste umzuwandeln
+            node_not_to_visit.add(list(v_neighbors)[0])
+
     return node_not_to_visit,same_distance
 
 def single_source_shortest_path_opt(G: Graph, s, nodes_not_to_visit, same_distance):
