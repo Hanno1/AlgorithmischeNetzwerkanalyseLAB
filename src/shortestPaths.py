@@ -311,15 +311,16 @@ def not_to_visit_neighbors_subset_nodes_2(G: Graph):
             for u in G.get_internal_grand_neighbors(v):       #Der aufwand nochmal alle neigbors zu holen könnte zu groß sein
                 u_neighbors = G.get_internal_neighbors(u)
                 if len(u_neighbors) != 1 and u_neighbors <= v_neighbors: #Der Teilmengenverlgeich brauch lange
-                    node_not_to_visit.add(v)
-                else:
-                    node_not_to_visit.add(v)
+                    if v not in same_distance.keys():
+                        node_not_to_visit.add(v)
         elif G.get_node_degree(G.internal_ids_node_ids[list(v_neighbors)[0]]) > 1: #Nicht sehr effektiv das erst in eine Liste umzuwandeln
             node_not_to_visit.add(list(v_neighbors)[0])
+            if v in same_distance:
+                node_not_to_visit.add(v)
 
     return node_not_to_visit,same_distance
 
-def single_source_shortest_path_opt(G: Graph, s, nodes_not_to_visit, same_distance):
+def single_source_shortest_path_opt(G: Graph, internal_s, same_distance,coming_from,add_value):
     """
     :param G:
     :param s: name of the Graph node for which shortest paths are computed
@@ -331,13 +332,8 @@ def single_source_shortest_path_opt(G: Graph, s, nodes_not_to_visit, same_distan
     are corresponding distances (int). Non-reachable nodes have distance infinite
 
     """
-    s = str(s)
-    if s not in G.node_ids_internal_ids:
-        raise Exc.NodeDoesNotExistException(s)
-    dist = {s: 0}
-
-    internal_s = G.node_ids_internal_ids[s]
-    visited = {internal_s}.union(nodes_not_to_visit)
+    dist = {internal_s}
+    visited = {internal_s}
     next_level = [internal_s]
     distance = 0
 
@@ -363,16 +359,42 @@ def single_source_shortest_path_opt(G: Graph, s, nodes_not_to_visit, same_distan
         next_level = child_level
     return dist
 
-def all_pairs_shortest_path_opt(G: Graph, nodes_not_to_visit, same_distance, cut_nodes):
+def rekursiv(G: Graph,dist,v,coming_node,t):
+    print(dist)
+    if G.get_node_degree(v) > t:
+        print("rek_v: ", v)
+        dist_v = {}
+        coming_node.add(v)
+        for w in G.get_internal_neighbors(v).difference(coming_node):
+            print("w: ", w)
+            dist[w] = rekursiv(G, dist, w,coming_node,t)
+        for w in G.get_internal_neighbors(v).difference(coming_node):
+            for u in dist[w].keys():
+                u = G.node_ids_internal_ids[u]
+                if u not in dist_v:
+                    dist_v[u] = math.inf
+                if u not in G.get_internal_neighbors(v).difference(coming_node) and u != v:
+                    dist_v[u] = min(dist_v[u],dist[w][u])+1
+                elif u == v:
+                    dist_v[u] = 0
+                else:
+                    dist_v[u] = 1
+        dist[v] = dist_v
+    else:
+        return single_source_shortest_path(G, G.internal_ids_node_ids[v])
+
+
+def all_pairs_shortest_path_opt(G: Graph,t):
     dist = {}
-    all_nodes = set(G.node_ids_internal_ids.values()).difference(cut_nodes)
-    for v in all_nodes:
-        dist[v] = single_source_shortest_path_opt(G, v,nodes_not_to_visit,same_distance)
+    coming_node = set()
+    #all_nodes = set(G.node_ids_internal_ids.values()).difference(cut_nodes.union(nodes_not_to_visit))
+    v = 0
+    rekursiv(G,dist,v,coming_node,t)
     return dist
 
-    no_start_nodes = find_cut_nodes(G)
-    node_not_to_visit = not_to_visit_neighbors_subset_nodes(G)
-    print(no_start_nodes)
-    print(type(no_start_nodes))
-    print(type(node_not_to_visit))
-    print(node_not_to_visit)
+    #no_start_nodes = find_cut_nodes(G)
+    #node_not_to_visit = not_to_visit_neighbors_subset_nodes(G)
+    #print(no_start_nodes)
+    #print(type(no_start_nodes))
+    #print(type(node_not_to_visit))
+    #print(node_not_to_visit)
