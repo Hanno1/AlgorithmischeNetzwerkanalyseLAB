@@ -23,6 +23,34 @@ def sort_nodes(G: Graph):
     return vertices_dict
 
 
+def algorithm_node_iterator_without_sorting(G: Graph):
+    """
+    trivial Algorithm for getting all triangles in the Graph G
+    just look at all pairwise neighbors of all nodes and check if they are connected
+
+    :param G: Graph
+    :return: number of triangles
+    """
+    tmpG = copy.deepcopy(G)
+
+    number_triangles = 0
+    mapping = G.internal_ids_node_ids
+
+    triangles = []
+    for internal_id in mapping:
+        neighbors = list(tmpG.get_internal_neighbors(internal_id))
+        for i in range(0, len(neighbors)-1):
+            for j in range(i+1, len(neighbors)):
+                n_i = neighbors[i]
+                n_j = neighbors[j]
+
+                if tmpG.test_internal_neighbors(n_i, n_j):
+                    triangles.append([mapping[internal_id], mapping[n_i], mapping[n_j]])
+                    number_triangles += 1
+        tmpG.remove_node(mapping[internal_id])
+    return number_triangles, triangles
+
+
 def algorithm_node_iterator(G: Graph):
     """
     trivial Algorithm for getting all triangles in the Graph G
