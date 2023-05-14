@@ -1,4 +1,3 @@
-import copy
 from numpy.linalg import matrix_power
 from src.Graph import Graph
 
@@ -31,7 +30,7 @@ def algorithm_node_iterator_without_sorting(G: Graph):
     :param G: Graph
     :return: number of triangles
     """
-    tmpG = copy.deepcopy(G)
+    tmpG = G.copy_graph()
 
     number_triangles = 0
     mapping = G.internal_ids_node_ids
@@ -59,7 +58,7 @@ def algorithm_node_iterator(G: Graph):
     :param G: Graph
     :return: number of triangles
     """
-    tmpG = copy.deepcopy(G)
+    tmpG = G.copy_graph()
     vertices_dict = sort_nodes(tmpG)
 
     number_triangles = 0
@@ -96,7 +95,7 @@ def algorithm_chiba_and_nishizeki(G: Graph):
     :param G: Graph
     :return: number of triangles in G
     """
-    tmpG = copy.deepcopy(G)
+    tmpG = G.copy_graph()
     vertices_dict = sort_nodes(tmpG)
 
     number_triangles = 0
@@ -181,7 +180,7 @@ def algorithm_edge_iterator(G: Graph):
     return triangle_counter, triangles
 
 
-def algorithm_triangle_counter_ayz(G: Graph, gamma):
+def algorithm_triangle_counter_ayz(G: Graph, gamma=3):
     V_low = []
     V_high = []
 
@@ -236,7 +235,7 @@ def algorithm_triangle_counter_ayz(G: Graph, gamma):
     return round(sum_of_triangles), tri_counter
 
 
-def algorithm_triangle_counter_ayz_internal_ids(G: Graph, gamma):
+def algorithm_triangle_counter_ayz_internal_ids(G: Graph, gamma=3):
     V_low = []
     V_high = []
 

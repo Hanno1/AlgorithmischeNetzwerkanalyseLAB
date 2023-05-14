@@ -327,6 +327,16 @@ class Graph:
                 mat[row_counter][n] = 1
         return mat, new_mapping, new_mapping_back
 
+    def copy_graph(self):
+        newG = Graph()
+        for node in self.node_ids_internal_ids:
+            newG.add_node(node)
+        for node in self.node_ids_internal_ids:
+            neighbors = self.get_neighbors(node)
+            for neighbor in neighbors:
+                newG.add_edge(node, neighbor)
+        return newG
+
     def print_nodes(self):
         s = ""
         for key in self.node_ids_internal_ids:
