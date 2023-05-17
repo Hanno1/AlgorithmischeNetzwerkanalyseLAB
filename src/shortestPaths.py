@@ -235,9 +235,10 @@ def breadth_first_search_tree(G: Graph,s,disc,low,time,parent,cut_nodes):
     """
     :param G:
 
-    Finds the Nodes that when they get deletet will create two new connected components. It will be find with Deep First Search
+    Finds the Nodes that when they get deleted will create two new connected components.
+    It's using the Tarjan’s Algorithm and therefore will create an BFS-Tree
 
-    :return: List of Cut-Nodes
+    :return: set of Cut-Nodes
     """
 
     low[s] = time;disc[s] = time
@@ -259,6 +260,13 @@ def breadth_first_search_tree(G: Graph,s,disc,low,time,parent,cut_nodes):
             low[s] = min(low[s],disc[node])
 
 def find_cut_nodes(G: Graph):
+    """
+    :param G:
+
+    Preparing the Creation of a Breadth_first_search_tree to get the Cut-Nodes
+
+    :return: set of Cut-Nodes
+    """
     s_id = random.sample(G.get_nodes(), 1)[0]
     while G.get_node_degree(s_id) != 1:
         s_id =  random.sample(G.get_nodes(),1)[0]              #Der Startknoten ist vllt entscheidend oder was passiert wenn es keinen Konten mit degree 1 gibt
@@ -270,6 +278,13 @@ def find_cut_nodes(G: Graph):
     return cut_nodes
 
 def not_to_visit_neighbors_subset_nodes(G: Graph):
+    """
+    :param G:
+
+    Finding all Nodes that dont need to be visited in the all pair shortest path for the calculation of the diameter of graph
+
+    :return: set of node_not_to_visit, dict of nodes with the same distance
+    """
     node_not_to_visit = set()
     same_distance = dict()
 
@@ -339,7 +354,7 @@ def single_source_shortest_path_opt(G: Graph, s, same_distance_copy,d_max):
     for node in same_distance.keys():
         if node in dist.keys():
             dist[same_distance[node]] = dist[node]
-        elif node in dist.values():
+        elif same_distance[node] in dist.keys():
             dist[node] = dist[same_distance[node]]
     if distance-1 == d_max:
         return dist , True
@@ -347,9 +362,12 @@ def single_source_shortest_path_opt(G: Graph, s, same_distance_copy,d_max):
 
 def min_condition(dist,neighbors):
     dist_v = dist[next(iter(neighbors))].copy()
+    #print("dist_v: ",dist_v, "\n", "neighbors: ", neighbors)
     for u in dist_v:
         min = math.inf
         for w in neighbors:
+            #print(w,u)
+            #print("neighbors: ",dist[w])
             if dist[w][u] < min:
                 min = dist[w][u]
         dist_v[u] = min + 1

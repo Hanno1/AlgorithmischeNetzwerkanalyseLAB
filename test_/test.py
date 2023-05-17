@@ -1,79 +1,81 @@
+import math
 import time
-
+import timeit
 from src.Graph import Graph
-#from src.printGraph import draw_graph
+from src.printGraph import draw_graph
 import src.shortestPaths as sp
+from matplotlib import pyplot as plt
+from tqdm import tqdm
+import numpy as np
+import networkx as nx
 
+G = Graph("D:/GitHub/AlgorithmischeNetzwerkanalyseLAB/networks/bio-celegans.mtx",Graph.READ_MOD_EDGE_LIST)
+
+def Average(lst):
+    return sum(lst) / len(lst)
+
+def generate_and_translate_graph(n, m, netx=False):
+    if m is None:
+        newG = nx.complete_graph(n)
+    elif m == 0:
+        newG = nx.empty_graph(n)
+    else:
+        newG = nx.dense_gnm_random_graph(n, m)
+    if netx:
+        return newG
+    nodes = nx.nodes(newG)
+    G = Graph()
+    for node in nodes:
+        G.add_node(node)
+    edges = nx.edges(newG)
+    for edge in edges:
+        G.add_edge(edge[0], edge[1])
+    return G
 
 G = Graph()
-
-G.add_edge(0,1)
-G.add_edge(1,2)
-G.add_edge(0,3)
-G.add_edge(3,4)
-
-#G.add_edge(0,2)
-#G.add_edge(1,3)
-#G.add_edge(0,1)
-#G.add_edge(2,3)
-#G.add_edge(3,4)
-#G.add_edge(3,5)
-#G.add_edge(4,6)
-#G.add_edge(5,6)
-#G.add_edge(6,7)
-#G.add_edge(8,6)
-
-#G.add_edge(1,4)
-#G.add_edge(4,2)
-#G.add_edge(4,5)
-#G.add_edge(4,6)
-#G.add_edge(4,3)
-#G.add_edge(4,7)
-#G.add_edge(2,5)
-#G.add_edge(5,15)
-#G.add_edge(5,6)
-#G.add_edge(6,7)
-#G.add_edge(6,3)
-#G.add_edge(6,13)
-#G.add_edge(6,14)
-#G.add_edge(3,11)
-#G.add_edge(3,8)
-#G.add_edge(15,16)
-#G.add_edge(14,10)
-#G.add_edge(14,12)
-#G.add_edge(12,11)
-#G.add_edge(12,10)
-#G.add_edge(12,9)
-#G.add_edge(9,8)
-#G.add_edge(13,8)
+# Number 0
+G.read_graph_metis("D:/GitHub/AlgorithmischeNetzwerkanalyseLAB/networks/case1.txt")
+draw_graph(G,label_on=True,internal_ids=True)
+for i in range(1000):
+    print(sp.diameter_opt(G, 2))
 
 
+num_repeat = 2
+num_iterations = 2
+
+node_degrees = []
+for node in G.get_nodes():
+    node_degrees.append(G.get_node_degree(node))
+
+max_degree = max(node_degrees)
+Average_degree = Average(node_degrees)
+print("max-degree: ", max_degree)
+print("Average_degree: ", Average_degree)
 
 
+SpeedUP_List = []
+t = 4
+for i in tqdm(range(1,100)):
+    G = generate_and_translate_graph(100,100)
+    try:
+        time_diameter = timeit.repeat(lambda: sp.diameter(G), time.process_time, repeat=num_repeat,
+                                      number=num_iterations)
+        time_diameter_opt = timeit.repeat(lambda: sp.diameter_opt(G, t), time.process_time, repeat=num_repeat,
+                                          number=num_iterations)
+        SpeedUP = [time_diameter[i] / time_diameter_opt[i] for i in range(len(time_diameter_opt))]
+        SpeedUP_List.append(Average(SpeedUP) - 1)
+    except Exception as ex:
+        G.save_graph_metis("D:/GitHub/AlgorithmischeNetzwerkanalyseLAB/networks/case1")
+        print(sp.diameter(G))
+        print(ex)
+        print("Fehler")
 
 
-#G.add_edge(0,1)
-#G.add_edge(1,2)
-#G.add_edge(0,2)
-#G.add_edge(2,3)
-#G.add_edge(3,4)
+    #print("time_diameter_opt: ", Average(time_diameter_opt))
+    #print("time_diameter: ", Average(time_diameter))
+    #print("SpeedUp: ", Average(SpeedUP))
 
-print(sp.all_pairs_shortest_path_opt(G,1))
-#print(sp.all_pairs_shortest_path(G))
-
-#for i in sp.find_cut_nodes(G):
-#    print(G.internal_ids_node_ids[i])
-#print("--")
-#same_distance = sp.not_to_visit_neighbors_subset_nodes(G)[1]
-#node_not_to_visit = sp.not_to_visit_neighbors_subset_nodes(G)[0]
-#for i in sp.not_to_visit_neighbors_subset_nodes_2(G)[0]:
-#    print(G.internal_ids_node_ids[i])
-
-#print(no_start_nodes)
-#print(same_distance)
-#print(node_not_to_visit)
-#print(sp.single_source_shortest_path(G,0))
-#print(sp.single_source_shortest_path_opt(G,0,node_not_to_visit,same_distance))
-#draw_graph(G,label_on=True)
-#sp.find_cut_nodes(G)
-#sp.all_pairs_shortest_path_opt(G,node_not_to_visit,same_distance,no_start_nodes)
+#x = np.arange(1,100, 1)
+#y = np.array(SpeedUP_List)
+#plt.scatter(x,y)
+#plt.show()
