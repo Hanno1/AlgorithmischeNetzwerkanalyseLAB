@@ -259,10 +259,11 @@ def breadth_first_search_tree(G: Graph,s,disc,low,time,parent,cut_nodes):
             low[s] = min(low[s],disc[node])
 
 def find_cut_nodes(G: Graph):
-    s_id =  random.sample(G.get_nodes(),1)[0]              #Der Startknoten ist vllt entscheidend
+    s_id = random.sample(G.get_nodes(), 1)[0]
+    while G.get_node_degree(s_id) != 1:
+        s_id =  random.sample(G.get_nodes(),1)[0]              #Der Startknoten ist vllt entscheidend oder was passiert wenn es keinen Konten mit degree 1 gibt
     node_ids = list(G.node_ids_internal_ids.keys())
     s = node_ids.index(str(s_id))
-
     time = 0
     disc = {}; low = {}; parent = {s:None}; cut_nodes = set()
     breadth_first_search_tree(G,s,disc,low,time,parent,cut_nodes)
@@ -271,30 +272,6 @@ def find_cut_nodes(G: Graph):
 def not_to_visit_neighbors_subset_nodes(G: Graph):
     node_not_to_visit = set()
     same_distance = dict()
-    u_set = set()
-    for v in G.internal_ids_node_ids:
-        v_neighbors = G.get_internal_neighbors(v)
-
-        for u in G.internal_ids_node_ids:
-            if v != u:
-                u_neighbors = G.get_internal_neighbors(u)
-                if v_neighbors == u_neighbors and v_neighbors != set() and u_neighbors != set():
-                    same_distance[v] = u
-                if u_neighbors <= v_neighbors and v_neighbors != set() and u_neighbors != set():
-                    u_set.add(u)
-
-        if len(node_not_to_visit & u_set) == 0 and len(u_set) != 0:
-            node_not_to_visit.add(v)
-    return node_not_to_visit,same_distance
-
-def not_to_visit_neighbors_subset_nodes_2(G: Graph):
-    node_not_to_visit = set()
-    same_distance = dict()
-
-    #Hashen der einzelen Nachtbarschaftssummen auf eine Zahl Wenn der gleich Hash dann sind die Mengen gleich
-    #Wenn der Kontengrad von Konten v > 1 ist und ein Nachtbar u einen Kontengrad u = 1 hat dann brauch von v keine Breitensuche gemacht werden
-    #Nachteilmengenknoten muss nur in der Großelternnachtbarschaft nachgeschaut werden
-    #Bei shortest Path gilt d_min kleiner gleich 2 mal d von random konten v
 
     #Hashen gleicher Nachtbarschaft: O(E)
     hash_map = dict()
@@ -320,7 +297,7 @@ def not_to_visit_neighbors_subset_nodes_2(G: Graph):
 
     return node_not_to_visit,same_distance
 
-def single_source_shortest_path_opt(G: Graph, internal_s, same_distance,coming_from,add_value):
+def single_source_shortest_path_opt(G: Graph, s, same_distance_copy,d_max):
     """
     :param G:
     :param s: name of the Graph node for which shortest paths are computed
@@ -332,9 +309,16 @@ def single_source_shortest_path_opt(G: Graph, internal_s, same_distance,coming_f
     are corresponding distances (int). Non-reachable nodes have distance infinite
 
     """
-    dist = {internal_s}
-    visited = {internal_s}
-    next_level = [internal_s]
+    same_distance = same_distance_copy.copy()
+    dist = {}
+    dist[s] = 0
+    if s in same_distance.keys():
+        same_distance.pop(s)
+    elif s in same_distance.values():
+        same_distance.pop(list(same_distance.keys())[list(same_distance.values()).index(s)])
+    visited = {s}
+    visited.update(set(same_distance.values()))
+    next_level = [s]
     distance = 0
 
     # traverse each "distance level" seperately, making stack pop operations unnecessary
@@ -346,55 +330,81 @@ def single_source_shortest_path_opt(G: Graph, internal_s, same_distance,coming_f
                 if v not in visited:
                     visited.add(v)
                     child_level.append(v)
-                    if v in same_distance.keys():
-                        u_same_distance = same_distance[v]
-                        if u_same_distance not in visited:
-                            visited.add(u_same_distance)
-                            external_v = G.internal_ids_node_ids[u_same_distance]
-                            dist[external_v] = distance
-                    external_v = G.internal_ids_node_ids[v]
+                    external_v = v
                     dist[external_v] = distance
-                    if len(visited) == G.n:
-                        return dist
+            if len(visited) == G.n:
+                break
+                #return dist
         next_level = child_level
-    return dist
+    for node in same_distance.keys():
+        if node in dist.keys():
+            dist[same_distance[node]] = dist[node]
+        elif node in dist.values():
+            dist[node] = dist[same_distance[node]]
+    if distance-1 == d_max:
+        return dist , True
+    return dist , False
 
-def rekursiv(G: Graph,dist,v,coming_node,t):
-    print(dist)
-    if G.get_node_degree(v) > t:
-        print("rek_v: ", v)
-        dist_v = {}
-        coming_node.add(v)
-        for w in G.get_internal_neighbors(v).difference(coming_node):
-            print("w: ", w)
-            dist[w] = rekursiv(G, dist, w,coming_node,t)
-        for w in G.get_internal_neighbors(v).difference(coming_node):
-            for u in dist[w].keys():
-                u = G.node_ids_internal_ids[u]
-                if u not in dist_v:
-                    dist_v[u] = math.inf
-                if u not in G.get_internal_neighbors(v).difference(coming_node) and u != v:
-                    dist_v[u] = min(dist_v[u],dist[w][u])+1
-                elif u == v:
-                    dist_v[u] = 0
-                else:
-                    dist_v[u] = 1
-        dist[v] = dist_v
+def min_condition(dist,neighbors):
+    dist_v = dist[next(iter(neighbors))].copy()
+    for u in dist_v:
+        min = math.inf
+        for w in neighbors:
+            if dist[w][u] < min:
+                min = dist[w][u]
+        dist_v[u] = min + 1
+    return  dist_v
+
+def all_pair_shortest_path_minimum_condition(G: Graph,dist,v,t,node_not_to_visit,same_distance,d_max):
+    dist_v = {}
+    all_distance_known = True
+    neighbors = G.get_internal_neighbors(v).difference(node_not_to_visit)
+    for w in neighbors:
+        if w not in dist:
+            all_distance_known = False
+    if all_distance_known and neighbors != set():
+        dist_v = min_condition(dist,neighbors)
+    elif G.get_node_degree(G.internal_ids_node_ids[v]) <= t and neighbors != set():
+        for w in neighbors:
+            dist[w], found_diameter = single_source_shortest_path_opt(G, w,same_distance,d_max)
+            if found_diameter:
+                return d_max
+        dist_v = min_condition(dist,neighbors)
     else:
-        return single_source_shortest_path(G, G.internal_ids_node_ids[v])
+        dist[v], found_diameter = single_source_shortest_path_opt(G, v,same_distance,d_max)
+        if found_diameter:
+            return d_max
+        return
 
+    dist[v] = dist_v
+    for w in G.get_neighbors(G.internal_ids_node_ids[v]):
+        dist[v][w] = 1
+    dist[v][G.internal_ids_node_ids[v]] = 0
 
-def all_pairs_shortest_path_opt(G: Graph,t):
+def all_pairs_shortest_path_opt(G: Graph,t,node_not_to_visit,same_distance):
     dist = {}
-    coming_node = set()
-    #all_nodes = set(G.node_ids_internal_ids.values()).difference(cut_nodes.union(nodes_not_to_visit))
-    v = 0
-    rekursiv(G,dist,v,coming_node,t)
+    all_nodes = set(G.node_ids_internal_ids.values()).difference(node_not_to_visit)
+    v = all_nodes.pop()
+    dist[v] = single_source_shortest_path_opt(G, v, same_distance,math.inf)[0]
+    d_max = 2*max(dist[v].values())
+    for v in all_nodes:
+        if v not in dist:
+            diameter = all_pair_shortest_path_minimum_condition(G,dist,v,t,node_not_to_visit,same_distance,d_max)
+            if diameter != None:
+                return diameter
     return dist
 
-    #no_start_nodes = find_cut_nodes(G)
-    #node_not_to_visit = not_to_visit_neighbors_subset_nodes(G)
-    #print(no_start_nodes)
-    #print(type(no_start_nodes))
-    #print(type(node_not_to_visit))
-    #print(node_not_to_visit)
+def diameter_opt(G: Graph,t):
+    diameter = -math.inf
+    node_not_to_visit, same_dist = not_to_visit_neighbors_subset_nodes(G)
+    node_not_to_visit.update(find_cut_nodes(G))
+    apsp = all_pairs_shortest_path_opt(G,t,node_not_to_visit,same_dist)
+
+    if type(apsp) != int:
+        for node in apsp:
+            d = max(apsp[node].values())
+            if d > diameter:
+                diameter = d
+        return diameter
+    else:
+        return apsp
