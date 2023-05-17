@@ -60,7 +60,7 @@ class Graph:
                     if line[0] == "%" or line[0] == "#":
                         continue
                     split = line.split(" ")
-                    if split[0] == "" or len(split) != 2:
+                    if split[0] == "":
                         raise Exc.UnknownSyntaxException(line_index, line)
                     self.add_edge(split[0], split[1])
                 file.close()
@@ -222,7 +222,8 @@ class Graph:
         id1 = str(id1)
         id2 = str(id2)
         if id1 == id2:
-            raise ValueError(f"Nodes have to be different!")
+            # raise ValueError(f"Nodes have to be different!")
+            return
         if id1 not in self.node_ids_internal_ids:
             self.add_node(id1)
         if id2 not in self.node_ids_internal_ids:
