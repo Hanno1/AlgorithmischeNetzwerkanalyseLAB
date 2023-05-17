@@ -29,6 +29,8 @@ def algorithm_node_iterator_without_sorting(G: Graph):
 
     :param G: Graph
     :return: number of triangles
+
+    -> azyklische Sortierung
     """
     tmpG = G.copy_graph()
 
