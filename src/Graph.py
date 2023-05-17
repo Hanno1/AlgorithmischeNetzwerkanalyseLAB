@@ -60,7 +60,7 @@ class Graph:
                     if line[0] == "%" or line[0] == "#":
                         continue
                     split = line.split(" ")
-                    if split[0] == "" or len(split) != 2:
+                    if split[0] == "":
                         raise Exc.UnknownSyntaxException(line_index, line)
                     self.add_edge(split[0], split[1])
                 file.close()
@@ -222,7 +222,8 @@ class Graph:
         id1 = str(id1)
         id2 = str(id2)
         if id1 == id2:
-            raise ValueError(f"Nodes have to be different!")
+            # raise ValueError(f"Nodes have to be different!")
+            return
         if id1 not in self.node_ids_internal_ids:
             self.add_node(id1)
         if id2 not in self.node_ids_internal_ids:
@@ -326,6 +327,16 @@ class Graph:
                 n = new_mapping[neighbor]
                 mat[row_counter][n] = 1
         return mat, new_mapping, new_mapping_back
+
+    def copy_graph(self):
+        newG = Graph()
+        for node in self.node_ids_internal_ids:
+            newG.add_node(node)
+        for node in self.node_ids_internal_ids:
+            neighbors = self.get_neighbors(node)
+            for neighbor in neighbors:
+                newG.add_edge(node, neighbor)
+        return newG
 
     def print_nodes(self):
         s = ""

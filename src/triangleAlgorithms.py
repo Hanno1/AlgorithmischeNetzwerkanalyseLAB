@@ -1,4 +1,3 @@
-import copy
 from numpy.linalg import matrix_power
 from src.Graph import Graph
 
@@ -23,6 +22,36 @@ def sort_nodes(G: Graph):
     return vertices_dict
 
 
+def algorithm_node_iterator_without_sorting(G: Graph):
+    """
+    trivial Algorithm for getting all triangles in the Graph G
+    just look at all pairwise neighbors of all nodes and check if they are connected
+
+    :param G: Graph
+    :return: number of triangles
+
+    -> azyklische Sortierung
+    """
+    tmpG = G.copy_graph()
+
+    number_triangles = 0
+    mapping = G.internal_ids_node_ids
+
+    triangles = []
+    for internal_id in mapping:
+        neighbors = list(tmpG.get_internal_neighbors(internal_id))
+        for i in range(0, len(neighbors)-1):
+            for j in range(i+1, len(neighbors)):
+                n_i = neighbors[i]
+                n_j = neighbors[j]
+
+                if tmpG.test_internal_neighbors(n_i, n_j):
+                    triangles.append([mapping[internal_id], mapping[n_i], mapping[n_j]])
+                    number_triangles += 1
+        tmpG.remove_node(mapping[internal_id])
+    return number_triangles, triangles
+
+
 def algorithm_node_iterator(G: Graph):
     """
     trivial Algorithm for getting all triangles in the Graph G
@@ -31,7 +60,7 @@ def algorithm_node_iterator(G: Graph):
     :param G: Graph
     :return: number of triangles
     """
-    tmpG = copy.deepcopy(G)
+    tmpG = G.copy_graph()
     vertices_dict = sort_nodes(tmpG)
 
     number_triangles = 0
@@ -68,7 +97,7 @@ def algorithm_chiba_and_nishizeki(G: Graph):
     :param G: Graph
     :return: number of triangles in G
     """
-    tmpG = copy.deepcopy(G)
+    tmpG = G.copy_graph()
     vertices_dict = sort_nodes(tmpG)
 
     number_triangles = 0
@@ -153,7 +182,7 @@ def algorithm_edge_iterator(G: Graph):
     return triangle_counter, triangles
 
 
-def algorithm_triangle_counter_ayz(G: Graph, gamma):
+def algorithm_triangle_counter_ayz(G: Graph, gamma=3):
     V_low = []
     V_high = []
 
@@ -208,7 +237,7 @@ def algorithm_triangle_counter_ayz(G: Graph, gamma):
     return round(sum_of_triangles), tri_counter
 
 
-def algorithm_triangle_counter_ayz_internal_ids(G: Graph, gamma):
+def algorithm_triangle_counter_ayz_internal_ids(G: Graph, gamma=3):
     V_low = []
     V_high = []
 
