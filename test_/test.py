@@ -12,7 +12,6 @@ G.add_edge(7, 8)
 # print(tri.algorithm_trivial(G))
 # print(tri.algorithm_chiba_and_nishizeki_dict(G))
 # print(tri.algorithm_edge_iterator(G))
-print(tri.algorithm_node_iterator_without_sorting(G))
-print(tri.algorithm_triangle_counter_ayz_internal_ids(G, 0))
+print(tri.algorithm_node_iterator_degeneracy_sorting(G))
 
 # G = Graph("test.txt", Graph.READ_MOD_METIS)

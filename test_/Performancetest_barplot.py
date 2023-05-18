@@ -4,7 +4,7 @@ import time
 import src.triangleAlgorithms as Ta
 import matplotlib.pyplot as plt
 import math
-from scipy.special import binom
+import random
 
 
 def generate_and_translate_graph(n, m, netx=False):
@@ -72,8 +72,13 @@ def test_and_plot_function_results(n, m, functions, names, iterations=100, netx=
 
 
 def test_and_plot_results(n_array, m_array, functions, names, iterations, colors=None, netx=None, useGnp=False):
-    if not colors or len(colors) != len(functions):
-        colors = ["black" for _ in range(len(functions))]
+    if colors is None or len(colors) != len(functions):
+        colors = []
+        for _ in range(len(functions)):
+            r = random.random()
+            g = random.random()
+            b = random.random()
+            colors.append([r, g, b])
     const_c = len(m_array[0])
     fig, axs = plt.subplots(len(n_array), const_c)
     row = 0
@@ -109,7 +114,7 @@ def test_and_plot_fully_connected(n_array, functions, names, iterations, colors=
 
 n_array = [50, 100, 200]
 functions = [Ta.algorithm_node_iterator, Ta.algorithm_node_iterator_without_sorting,
-             Ta.algorithm_triangle_counter_ayz, nx.triangles]
+             Ta.algorithm_node_iterator_degeneracy_sorting, nx.triangles]
 names = ["node iterator", "node iterator, no sorting", "ayz", "network x"]
 colors = ["blue", "green", "orange", "red"]
 m_array = [[0, entry * 2, entry * round(math.log(entry))] for entry in n_array]
