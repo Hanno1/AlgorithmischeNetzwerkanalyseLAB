@@ -35,10 +35,15 @@ class GraphPerformanceTester:
                 for j in range(i + 1, size):
                     i, j = str(i), str(j)
                     FCGraph.add_edge(i, j)
-                    FCGraph_nx.add_edge(i, j)
-                    if random.random() < self.rand_edge_density:
-                        RandGraph.add_edge(i, j)
-                        RandGraph_nx.add_edge(i, j)
+                    FCGraph_nx.add_edge(str(i), str(j))
+            edges_density = int(self.rand_edge_density*((size*(size-1))/2))
+            for e in range(edges_density):
+                a= random.randint(0,size)
+                b= random.randint(0,size)
+                while a == b:
+                    b= random.randint(0,size)
+                RandGraph.add_edge(a, b)
+                RandGraph_nx.add_edge(str(a), str(b))
 
             self.graphs[size] = {self.graph_types[0]: (EmptyGraph, EmptyGraph_nx),
                                  self.graph_types[1]: (RandGraph, RandGraph_nx),
