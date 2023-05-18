@@ -4,30 +4,54 @@ from itertools import combinations
 from queue import PriorityQueue
 
 def density(G: Graph):
+    """
+    :param G: Graph
+    returns: density of a Graph G: float
+
+    """
     return (2*G.m)/(G.n*(G.n-1))
 
 def max_degree(G: Graph):
-    max_deg = 0 
-    for i in G.internal_ids_node_ids:
-        deg = len(G.edges[i])
-        if max_deg < deg:
-            max_deg = deg
-    return max_deg
+    """
+    :param G: Graph
+    returns: maximum degree of a Graph G: int
+
+    """
+    return max(len(G.edges[node]) for node in G.internal_ids_node_ids.keys())
 
 def h_index(G: Graph):
-    degrees = []
-    for i in G.internal_ids_node_ids:
-        degrees.append(len(G.edges[i]))
-    degrees.sort(reverse=True)
-    h_id = degrees[0]
-    for i, deg in enumerate(degrees):
-        if i>= h_id:
-            return h_id
-        if deg < h_id:
+    """
+    :param G: Graph
+        calculates a maximum value h such that the given Graph has at least 
+        h nodes that have at least degree h
+    returns: returns the h-index of a Graph G: int
+
+    """
+    degree_counts = defaultdict(int) # default value = 0
+    for node in G.internal_ids_node_ids.keys():
+        degree_counts[len(G.edges[node])] += 1
+    h_id = 0 
+    node_count = 0
+    # go from maximum possible degree/h-index to lowest 
+    # instead of sorting the dictionary keys
+    for deg in range(G.n, -1, -1): 
+        node_count += degree_counts[deg]
+        if node_count >= deg:
             h_id = deg
+            break
     return h_id
 
 def degeneracy(G: Graph):
+    """
+    :param G: Graph
+        calculates the degeneracy d(G) of a Graph G: maximum of the minimal degrees in all Subgraphs of G 
+        calculates the degeneracy ordering of a Graph: Every node of rank k has max d(G) neighbors in the 
+        subgraph consisting of nodes with rank r>k
+    returns: 
+        degeneracy: int
+        degeneracy_ordering: list of G
+
+    """
     degree_queue = PriorityQueue()
     node_to_deg = {} # maps node to its degree
     degeneracy_order = []
@@ -60,6 +84,16 @@ def degeneracy(G: Graph):
     return degeneracy, degeneracy_order
 
 def k_core_decomposition(G:Graph):
+    """
+    :param G: Graph
+        The k-core of a graph G is the maximal subgraph G' of G such that the
+        minimum degree of G' is k (note: the 0-core automatically has all nodes)
+    returns: 
+        dictionary of sets 
+            where key: k (of core)
+            value: set of nodes that belong to k-core but not to any (x|x<k)-core 
+                    the complete k-core is then the union of sets with keys <=k
+    """
     _, degeneracy_order = degeneracy(G)
     forward_edges = {}
     for i in range(G.n):
@@ -76,8 +110,13 @@ def k_core_decomposition(G:Graph):
         L[k].add(n)
     return L
 
-
 def global_clustering_coefficient(G: Graph):
+    """
+    :param G: Graph
+        compute extent, to which Graph exhibits triadic closure. (6*#triangles)/(#pfade der länge 2)
+    returns: returns the global clustering coefficient of a Graph G: int [0,1]
+
+    """
     triangles = 0
     triples = 0
     for node in G.internal_ids_node_ids:
@@ -85,13 +124,19 @@ def global_clustering_coefficient(G: Graph):
         k = len(neighbors)
         if k < 2:
             continue
-        triples += k * (k-1) // 2
+        triples += k * (k-1) // 2 # possible triangles
         triangles += sum(1 for u, v in combinations(neighbors, 2) if v in G.edges[u])
     if triples == 0:
         return 0.0
     return (triangles / triples)
 
 def local_clustering_coefficient(G: Graph, node):
+    """
+    :param G: Graph
+        compute extent, to which a node neighborhood exhibits triadic closure.
+    returns: returns the local clustering coefficient of a node in a Graph G: int [0,1]
+
+    """
     internal_node = G.node_ids_internal_ids[node]
     neighbors = G.get_internal_neighbors(internal_node)
     k = len(neighbors)

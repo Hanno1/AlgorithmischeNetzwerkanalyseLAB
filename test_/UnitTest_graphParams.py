@@ -20,6 +20,9 @@ for e in edges:
     G.add_edge(str(i),str(j))
 
 class TestShortestPaths(TestCase):
+    def test_max_deg(self):
+        self.assertEqual(gP.max_degree(G), 5)
+
     def test_hindex(self):
         self.assertEqual(gP.h_index(G), 4)
 
