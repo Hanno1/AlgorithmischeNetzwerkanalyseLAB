@@ -267,11 +267,7 @@ def find_cut_nodes(G: Graph):
 
     :return: set of Cut-Nodes
     """
-    s_id = random.sample(G.get_nodes(), 1)[0]
-    while G.get_node_degree(s_id) != 1:
-        s_id =  random.sample(G.get_nodes(),1)[0]              #Der Startknoten ist vllt entscheidend oder was passiert wenn es keinen Konten mit degree 1 gibt
-    node_ids = list(G.node_ids_internal_ids.keys())
-    s = node_ids.index(str(s_id))
+    s = random.sample(G.internal_ids_node_ids.keys(), 1)[0]
     time = 0
     disc = {}; low = {}; parent = {s:None}; cut_nodes = set()
     breadth_first_search_tree(G,s,disc,low,time,parent,cut_nodes)
@@ -291,20 +287,24 @@ def not_to_visit_neighbors_subset_nodes(G: Graph):
     #Hashen gleicher Nachtbarschaft: O(E)
     hash_map = dict()
     for v in G.internal_ids_node_ids:
+        #print("v: ", v)
         v_neighbors = G.get_internal_neighbors(v)
         v_degree = len(v_neighbors)
-
-        v_neighbors_hash = hash(sum([pow(i, 2) for i in v_neighbors]))
+        v_neighbors_hash = hash(sum([hash(str(i)) for i in v_neighbors]))
+        #print(v_neighbors_hash)
+        #print(v_neighbors)
+        #print(sum([pow((hash(i)+1), 2) for i in v_neighbors]))
         if v_neighbors_hash not in hash_map:
             hash_map[v_neighbors_hash] = v
         else:
-            same_distance[v] = hash_map[v_neighbors_hash]   #Was ist wenn mehrere Nachtbarn den selebn Hash als nur zwei
+            same_distance[v] = hash_map[v_neighbors_hash]
         if v_degree != 1:
             for u in G.get_internal_grand_neighbors(v):       #Der aufwand nochmal alle neigbors zu holen könnte zu groß sein
                 u_neighbors = G.get_internal_neighbors(u)
                 if len(u_neighbors) != 1 and u_neighbors <= v_neighbors: #Der Teilmengenverlgeich brauch lange
                     if v not in same_distance.keys():
                         node_not_to_visit.add(v)
+        #Wenn der Knotengrad 1 ist aber der des einzigen nachtbarn nicht dann muss man diesen nachtbarn nicht besuchen
         elif G.get_node_degree(G.internal_ids_node_ids[list(v_neighbors)[0]]) > 1: #Nicht sehr effektiv das erst in eine Liste umzuwandeln
             node_not_to_visit.add(list(v_neighbors)[0])
             if v in same_distance:
@@ -368,31 +368,42 @@ def min_condition(dist,neighbors):
         for w in neighbors:
             #print(w,u)
             #print("neighbors: ",dist[w])
-            if dist[w][u] < min:
+            if dist[w][u] < min:                                    #Fehler
                 min = dist[w][u]
         dist_v[u] = min + 1
     return  dist_v
 
 def all_pair_shortest_path_minimum_condition(G: Graph,dist,v,t,node_not_to_visit,same_distance,d_max):
+    #print("v_all_pair: ", v)
     dist_v = {}
     all_distance_known = True
-    neighbors = G.get_internal_neighbors(v).difference(node_not_to_visit)
+    neighbors = G.get_internal_neighbors(v)
+
+    #Kurz checken ob alle Nachtbarn bekannt sind. Wenn ja werte Minimum aus O(mean_degree)
     for w in neighbors:
         if w not in dist:
             all_distance_known = False
+
+
     if all_distance_known and neighbors != set():
         dist_v = min_condition(dist,neighbors)
     elif G.get_node_degree(G.internal_ids_node_ids[v]) <= t and neighbors != set():
-        for w in neighbors:
-            dist[w], found_diameter = single_source_shortest_path_opt(G, w,same_distance,d_max)
-            if found_diameter:
-                return d_max
-        dist_v = min_condition(dist,neighbors)
-    else:
-        dist[v], found_diameter = single_source_shortest_path_opt(G, v,same_distance,d_max)
+        #print("<t -> Breitensuche")
+        dist[v], found_diameter = single_source_shortest_path_opt(G, v, same_distance, d_max)
+        #print("dist[v]: ",dist[v])
         if found_diameter:
             return d_max
         return
+    else:
+        #print(">t -> Nachtbar-Breitensuche")
+        for w in neighbors:
+            if w not in dist:
+                dist[w], found_diameter = single_source_shortest_path_opt(G, w,same_distance,d_max)
+                #print("w: ",w," dist[w]: ", dist[w])
+                if found_diameter:
+                    return d_max
+        dist_v = min_condition(dist,neighbors)
+
 
     dist[v] = dist_v
     for w in G.get_neighbors(G.internal_ids_node_ids[v]):
@@ -402,9 +413,14 @@ def all_pair_shortest_path_minimum_condition(G: Graph,dist,v,t,node_not_to_visit
 def all_pairs_shortest_path_opt(G: Graph,t,node_not_to_visit,same_distance):
     dist = {}
     all_nodes = set(G.node_ids_internal_ids.values()).difference(node_not_to_visit)
-    v = all_nodes.pop()
-    dist[v] = single_source_shortest_path_opt(G, v, same_distance,math.inf)[0]
-    d_max = 2*max(dist[v].values())
+
+    d_max = math.inf
+    if len(node_not_to_visit) != 0:
+        v = node_not_to_visit.copy().pop()                                                                                  #nicht sehr speichereffizent
+        dist[v] = single_source_shortest_path_opt(G, v, same_distance,math.inf)[0]
+        d_max = 2*max(dist[v].values())                                                                                     #gut für eine erste Abschätzung
+
+
     for v in all_nodes:
         if v not in dist:
             diameter = all_pair_shortest_path_minimum_condition(G,dist,v,t,node_not_to_visit,same_distance,d_max)
@@ -414,8 +430,17 @@ def all_pairs_shortest_path_opt(G: Graph,t,node_not_to_visit,same_distance):
 
 def diameter_opt(G: Graph,t):
     diameter = -math.inf
+
+    sub_graph = max(connected_components(G), key=len)
+    for node in G.get_nodes():
+        if node not in sub_graph:
+            G.remove_node(node)
+
     node_not_to_visit, same_dist = not_to_visit_neighbors_subset_nodes(G)
+    #print("node_not_to_visit: ",node_not_to_visit)
+    #print("same_dist: ", same_dist)
     node_not_to_visit.update(find_cut_nodes(G))
+    #print("find_cut_nodes: ", find_cut_nodes(G))
     apsp = all_pairs_shortest_path_opt(G,t,node_not_to_visit,same_dist)
 
     if type(apsp) != int:
