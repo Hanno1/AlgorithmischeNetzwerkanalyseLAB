@@ -113,9 +113,9 @@ def test_and_plot_fully_connected(n_array, functions, names, iterations, colors=
 
 
 n_array = [50, 100, 200]
-functions = [Ta.algorithm_node_iterator, Ta.algorithm_node_iterator_without_sorting,
+functions = [Ta.algorithm_chiba_and_nishizeki, Ta.algorithm_node_iterator_without_sorting,
              Ta.algorithm_node_iterator_degeneracy_sorting, nx.triangles]
-names = ["node iterator", "node iterator, no sorting", "ayz", "network x"]
+names = ["chiba", "node iterator, no sorting", "ayz", "network x"]
 colors = ["blue", "green", "orange", "red"]
 m_array = [[0, entry * 2, entry * round(math.log(entry))] for entry in n_array]
 p_array = [[0.01, 0.1, 0.5] for entry in n_array]

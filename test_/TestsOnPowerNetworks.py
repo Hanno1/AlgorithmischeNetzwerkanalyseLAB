@@ -60,10 +60,8 @@ class TestTriangleImplementationPowerNetworks:
 
 test = TestTriangleImplementationPowerNetworks([tri.algorithm_node_iterator,
                                                 tri.algorithm_node_iterator_without_sorting,
-                                                tri.algorithm_edge_iterator,
-                                                tri.algorithm_chiba_and_nishizeki,
+                                                tri.algorithm_node_iterator_degeneracy_sorting,
                                                 nx.triangles],
                                                ["Node Iterator", "Node Iterator, no sorting",
-                                                "edge iterator", "chiba and nis",
-                                                "networkX"], [4])
+                                                "Node Iterator, degeneracy", "networkX"], [3])
 test.plot_and_run()
