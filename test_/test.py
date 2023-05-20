@@ -8,6 +8,8 @@ from matplotlib import pyplot as plt
 from tqdm import tqdm
 import numpy as np
 import networkx as nx
+import sys
+sys.setrecursionlimit(3000)
 from networkx.algorithms.distance_measures import diameter
 
 def Average(lst):
@@ -171,7 +173,7 @@ num_iterations = 2
 
 SpeedUP_List_global = []
 t = 2
-for j in range(1,100):
+for j in range(1,5000,200):
     SpeedUP_List = []
     for i in tqdm(range(1,10)):
         G, G_nx = generate_and_translate_graph(10*j, 10*j)
@@ -182,11 +184,13 @@ for j in range(1,100):
             dia_opt = sp.diameter_opt(G, t)
             dia_nx = nx.diameter(GNX)
 
+            time_diameter_nx = timeit.repeat(lambda: nx.diameter(GNX), time.process_time, repeat=num_repeat,
+                                          number=num_iterations)
             time_diameter = timeit.repeat(lambda: sp.diameter(G), time.process_time, repeat=num_repeat,
                                           number=num_iterations)
             time_diameter_opt = timeit.repeat(lambda: sp.diameter_opt(G, t), time.process_time, repeat=num_repeat,
                                               number=num_iterations)
-            SpeedUP = [time_diameter[i] / time_diameter_opt[i] for i in range(len(time_diameter_opt))]
+            SpeedUP = [time_diameter_nx[i] / time_diameter_opt[i] for i in range(len(time_diameter_opt))]
 
 
             if dia_nx-dia_opt != 0:
@@ -205,7 +209,7 @@ for j in range(1,100):
             print("Fehler")
     SpeedUP_List_global.append(Average(SpeedUP_List))
 
-x = np.arange(1,990, 10)
+x = np.arange(1,50000, 2000)
 y = np.array(SpeedUP_List_global)
 print(x.shape)
 print(y.shape)
