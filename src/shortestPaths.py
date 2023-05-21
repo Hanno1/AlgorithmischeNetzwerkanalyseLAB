@@ -222,6 +222,13 @@ def connected_components(G: Graph):
     return components
 
 def diameter(G: Graph):
+    """
+    :param G: Graph
+
+    Calculating the Diameter by calculating all-pair-shortest-path and searching for the max-distance between two nodes.
+
+    :return: Diameter of G as Interger
+    """
     diameter = -math.inf
     apsp = all_pairs_shortest_path(G)
     for node1 in apsp:
@@ -312,10 +319,10 @@ def single_source_shortest_path_opt(G: Graph, s, same_distance_copy,d_max):
     :param G:
     :param s: name of the Graph node for which shortest paths are computed
 
-    calculates the length of the shortest path from node s to each node in the Graph.
+    Calculates the length of the shortest path from node s to each node in the Graph.
 
     returns:
-    dictionary where keys are names of all nodes in the Graph and values
+    Dictionary where keys are names of all nodes in the Graph and values
     are corresponding distances (int). Non-reachable nodes have distance infinite
 
     """
@@ -356,14 +363,19 @@ def single_source_shortest_path_opt(G: Graph, s, same_distance_copy,d_max):
     return dist , False
 
 def min_condition(dist,neighbors):
+    """
+    :param dist: Distance-Dictonary of v
+    :param neighbors: All Neighbors of Node v
+
+    Compares the Distance from all w (neighbor of v) to node u. Get the Minimum and the distance for v is distance(w-u) + 1
+
+    :return: Distance-Dictonary of v
+    """
     dist_v = dist[next(iter(neighbors))].copy()
-    #print("dist_v: ",dist_v, "\n", "neighbors: ", neighbors)
     for u in dist_v:
         min = math.inf
         for w in neighbors:
-            #print(w,u)
-            #print("neighbors: ",dist[w])
-            if dist[w][u] < min:                                    #Fehler
+            if dist[w][u] < min:
                 min = dist[w][u]
         dist_v[u] = min + 1
     return  dist_v
@@ -376,7 +388,14 @@ def all_pair_shortest_path_minimum_condition(G: Graph,dist,v,max_node_degree,sam
     :param max_node_degree: Integer for the max_node_degree for witch the breath first search will be run
     :param same_distance: Nodes that have the same distance dictionary dont need to be visited both.
     :param d_max:
-    :return: The Distance-Dictionary of v
+
+    Calculation of the Distance Dictionary for node v. If all Distance for the Neighbors of v are known, then it will calculate the Minimum-Condition to get the
+    Distance for v. If not all distances of the neighbor of v are known than:
+    1) If Node-Degree is <= max_node_degree it will calculate the Distance-Dictionary of v by breath first search
+    2) If Node-Degree is > max_node_degree it will calculate the Distance-Dictionary of all neighbors by breath first search and then will Distance-Dictionary of v
+    wit the Minimum-Condition
+
+    :return: The Distance of two nodes if the Condition for the max-Diameter (dia = 2*max(distance of random node))
     """
     dist_v = {}
     all_distance_known = True
@@ -415,18 +434,18 @@ def all_pairs_shortest_path_opt(G: Graph,max_node_degree,node_not_to_visit,same_
     :param node_not_to_visit: Nodes that dont need to be visited for the calculation of the Diameter.
     :param same_distance: Nodes that have the same distance dictionary dont need to be visited both.
 
-    Made an Appraisal for the larges possible Diameter. Than will calculate the all_pair_shortest_path for every node.
+    Made an Appraisal for the larges possible Diameter. Then will calculate the all_pair_shortest_path for every node.
 
-    :return: The Distance-Dictornaray of ever node that not in node_not_to_visit and in G OR It will return the diameter if the Algo finds a diameter that will be equal to the larges possible Diameter.
+    :return: The Distance-Dictionary of every node that not in node_not_to_visit and in G OR It will return the diameter if the Algo finds a diameter that will be equal to the larges possible Diameter.
     """
     dist = {}
     all_nodes = set(G.node_ids_internal_ids.values()).difference(node_not_to_visit)
 
     d_max = math.inf
     if len(node_not_to_visit) != 0:
-        v = node_not_to_visit.copy().pop()                                                                                  #nicht sehr speichereffizent
+        v = node_not_to_visit.copy().pop()
         dist[v] = single_source_shortest_path_opt(G, v, same_distance,math.inf)[0]
-        d_max = 2*max(dist[v].values())                                                                                     #gut für eine erste Abschätzung
+        d_max = 2*max(dist[v].values())
 
 
     for v in all_nodes:
@@ -441,7 +460,7 @@ def diameter_opt(G: Graph,max_node_degree):
     :param G: The complet Graph. Dont need to be connected
     :param max_node_degree: Integer for the max_node_degree for witch the breath first search will be run
 
-    Calculation all Pair-Shortest-Path for each node expect for nodes_not_to_visit or cut-nodes. Thes node can not be the start or end Node of an shortest path that define the diameter of G.
+    Calculation all Pair-Shortest-Path for each node except for nodes_not_to_visit or cut-nodes. This node can not be the start or end Node of an shortest path that define the diameter of G.
 
     :return: The Diameter of the Graph G as Integer
     """
