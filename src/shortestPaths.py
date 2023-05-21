@@ -448,7 +448,7 @@ def all_pairs_shortest_path_opt(G: Graph,max_node_degree,node_not_to_visit,same_
 
     for v in all_nodes:
         if v not in dist:
-            diameter = all_pair_shortest_path_minimum_condition(G,dist,v,max_node_degree,node_not_to_visit,same_distance,d_max)
+            diameter = all_pair_shortest_path_minimum_condition(G,dist,v,max_node_degree,same_distance,d_max)
             if diameter != None:
                 return diameter
     return dist
