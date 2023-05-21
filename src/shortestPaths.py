@@ -31,13 +31,10 @@ def single_source_shortest_path(G: Graph, s):
     s = str(s)
     if s not in G.node_ids_internal_ids:
         raise Exc.NodeDoesNotExistException(s)
-    dist = {}
-    for n in G.node_ids_internal_ids:
-        dist[n] = math.inf
+    dist = dict()
     dist[s] = 0
 
     internal_s = G.node_ids_internal_ids[s]
-    visited = {internal_s}
     next_level = [internal_s]
     distance = 0
 
@@ -47,18 +44,17 @@ def single_source_shortest_path(G: Graph, s):
         child_level = []
         for u in next_level:
             for v in G.get_internal_neighbors(u):
-                if v not in visited:
-                    visited.add(v)
+                if G.internal_ids_node_ids[v] not in dist:
                     child_level.append(v)
                     external_v = G.internal_ids_node_ids[v]
                     dist[external_v] = distance
-                    if len(visited) == G.n:
+                    if len(dist) == G.n:
                         return dist
         next_level = child_level
     return dist
 
 
-def _all_pairs_shortest_path_single(G: Graph):
+def all_pairs_shortest_path_single(G: Graph):
     dist = {}
     for v in G.node_ids_internal_ids:
         dist[v] = single_source_shortest_path(G, v)
@@ -72,7 +68,7 @@ def _calc_shortest_paths(node_chunk, G: Graph):
     return dist_chunk
 
 
-def _all_pairs_shortest_path_parallel(G: Graph, num_processes: int):
+def all_pairs_shortest_path_parallel(G: Graph, num_processes: int):
     dist = {}
     nodes = list(G.node_ids_internal_ids.keys())
     node_chunks = [nodes[i::num_processes] for i in range(num_processes)]
@@ -109,9 +105,9 @@ def all_pairs_shortest_path(G: Graph):
     num_processes = 3
     #num_processes = multiprocessing.cpu_count()
     if num_processes < 4:
-        return _all_pairs_shortest_path_single(G)
+        return all_pairs_shortest_path_single(G)
     else:
-        return _all_pairs_shortest_path_parallel(G, num_processes)
+        return all_pairs_shortest_path_parallel(G, num_processes)
 
 
 def breadth_first_search(G: Graph, parent: dict, b_parent: dict, queue: deque):
@@ -161,6 +157,8 @@ def shortest_s_t_path(G: Graph, s_id, t_id):
 
     if s_id == t_id:
         return [str(s_id)], 0
+    if G.test_neighbors(s_id, t_id):
+        return [[s_id, t_id], 1]
 
     node_ids = list(G.node_ids_internal_ids.keys())
 

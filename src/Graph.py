@@ -1,4 +1,7 @@
+import sys
+
 import src.CustomExceptions as Exc
+import numpy as np
 
 
 class Graph:
@@ -18,7 +21,7 @@ class Graph:
         self.n = 0
         self.m = 0
 
-        self.max_internal_idx = 0
+        self.max_internal_id = 0
         self.node_ids_internal_ids = dict()
         self.internal_ids_node_ids = dict()
 
@@ -30,8 +33,15 @@ class Graph:
             else:
                 print(f"Unknown mode for reading a file {mode}")
 
+    def generate_nodes(self):
+        for key in self.node_ids_internal_ids:
+            yield key
+
     def get_nodes(self):
         return set(self.node_ids_internal_ids.keys())
+
+    def get_internal_nodes(self):
+        return set(self.internal_ids_node_ids.keys())
 
     def read_graph_as_edge_list(self, path):
         """
@@ -50,7 +60,7 @@ class Graph:
                     if line[0] == "%" or line[0] == "#":
                         continue
                     split = line.split(" ")
-                    if split[0] == "" or len(split) != 2:
+                    if split[0] == "":
                         raise Exc.UnknownSyntaxException(line_index, line)
                     self.add_edge(split[0], split[1])
                 file.close()
@@ -164,17 +174,17 @@ class Graph:
         :param idx: name or index of the node
         """
         idx = str(idx)
-        if len(idx.split(" ")) > 1:
+        if len(idx.split()) > 1:
             raise Exc.InvalidNodeIdException(idx)
         if idx in self.node_ids_internal_ids:
             return
-        internal_id = self.max_internal_idx
+        internal_id = self.max_internal_id
 
         self.edges[internal_id] = set()
 
         self.node_ids_internal_ids[idx] = internal_id
         self.internal_ids_node_ids[internal_id] = idx
-        self.max_internal_idx += 1
+        self.max_internal_id += 1
         self.n += 1
 
     def remove_node(self, idx):
@@ -212,7 +222,8 @@ class Graph:
         id1 = str(id1)
         id2 = str(id2)
         if id1 == id2:
-            raise ValueError(f"Nodes have to be different!")
+            # raise ValueError(f"Nodes have to be different!")
+            return
         if id1 not in self.node_ids_internal_ids:
             self.add_node(id1)
         if id2 not in self.node_ids_internal_ids:
@@ -265,6 +276,9 @@ class Graph:
 
         internal_id1 = self.node_ids_internal_ids[id1]
         internal_id2 = self.node_ids_internal_ids[id2]
+        return self.test_internal_neighbors(internal_id1, internal_id2)
+
+    def test_internal_neighbors(self, internal_id1, internal_id2):
         if internal_id1 in self.edges[internal_id2]:
             return True
         return False
@@ -307,6 +321,32 @@ class Graph:
         if idx in self.node_ids_internal_ids:
             return len(self.edges[self.node_ids_internal_ids[idx]])
         raise Exc.NodeDoesNotExistException(idx)
+
+    def get_adjacency_matrix(self):
+        mat = np.zeros((self.n, self.n))
+        new_mapping = dict()
+        new_mapping_back = dict()
+        counter = 0
+        for key in self.node_ids_internal_ids:
+            new_mapping[key] = counter
+            new_mapping_back[counter] = key
+            counter += 1
+        for row_counter in range(len(mat)):
+            neighbors = self.get_neighbors(new_mapping_back[row_counter])
+            for neighbor in neighbors:
+                n = new_mapping[neighbor]
+                mat[row_counter][n] = 1
+        return mat, new_mapping, new_mapping_back
+
+    def copy_graph(self):
+        newG = Graph()
+        for node in self.node_ids_internal_ids:
+            newG.add_node(node)
+        for node in self.node_ids_internal_ids:
+            neighbors = self.get_neighbors(node)
+            for neighbor in neighbors:
+                newG.add_edge(node, neighbor)
+        return newG
 
     def print_nodes(self):
         s = ""
