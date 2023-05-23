@@ -140,7 +140,7 @@ def local_clustering_coefficient(G: Graph, node):
     internal_node = G.node_ids_internal_ids[node]
     neighbors = G.get_internal_neighbors(internal_node)
     k = len(neighbors)
-    if k == 0:
+    if k <= 1:
         return 0
     edges_neighborhood = sum(1 for u, v in combinations(neighbors, 2) if v in G.edges[u])
     return (edges_neighborhood / ((k * (k-1))/2))
