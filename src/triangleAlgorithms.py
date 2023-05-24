@@ -1,5 +1,6 @@
 from numpy.linalg import matrix_power
 from src.Graph import Graph
+from itertools import combinations
 
 
 def sort_nodes(G: Graph):
@@ -54,6 +55,23 @@ def sort_degeneracy_order(G: Graph):
                         degree_mapping[u] -= 1
                 j = n
     return sigma
+
+
+def algorithm_with_combinations(G: Graph):
+    """
+    Algorithm using combinations from itertools
+    """
+    triangles = []
+    number_of_triangles = 0
+    mapping = G.internal_ids_node_ids
+    for node in G.internal_ids_node_ids:
+        neighbors = list(G.get_internal_neighbors(node))
+        for u, v in combinations(neighbors, 2):
+            if v in G.edges[u]:
+                if node < u and node < v:
+                    number_of_triangles += 1
+                    triangles.append((mapping[node], mapping[u], mapping[v]))
+    return number_of_triangles, triangles
 
 
 def algorithm_node_iterator_without_sorting(G: Graph):

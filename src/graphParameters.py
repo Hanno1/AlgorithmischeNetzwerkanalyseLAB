@@ -3,6 +3,7 @@ from collections import deque, defaultdict
 from itertools import combinations
 from queue import PriorityQueue
 
+
 def density(G: Graph):
     """
     :param G: Graph
@@ -11,6 +12,7 @@ def density(G: Graph):
     """
     return (2*G.m)/(G.n*(G.n-1))
 
+
 def max_degree(G: Graph):
     """
     :param G: Graph
@@ -18,6 +20,7 @@ def max_degree(G: Graph):
 
     """
     return max(len(G.edges[node]) for node in G.internal_ids_node_ids.keys())
+
 
 def h_index(G: Graph):
     """
@@ -40,6 +43,7 @@ def h_index(G: Graph):
             h_id = deg
             break
     return h_id
+
 
 def degeneracy(G: Graph):
     """
@@ -83,6 +87,7 @@ def degeneracy(G: Graph):
 
     return degeneracy, degeneracy_order
 
+
 def k_core_decomposition(G:Graph):
     """
     :param G: Graph
@@ -110,6 +115,7 @@ def k_core_decomposition(G:Graph):
         L[k].add(n)
     return L
 
+
 def global_clustering_coefficient(G: Graph):
     """
     :param G: Graph
@@ -128,7 +134,8 @@ def global_clustering_coefficient(G: Graph):
         triangles += sum(1 for u, v in combinations(neighbors, 2) if v in G.edges[u])
     if triples == 0:
         return 0.0
-    return (triangles / triples)
+    return triangles / triples
+
 
 def local_clustering_coefficient(G: Graph, node):
     """
@@ -143,4 +150,4 @@ def local_clustering_coefficient(G: Graph, node):
     if k <= 1:
         return 0
     edges_neighborhood = sum(1 for u, v in combinations(neighbors, 2) if v in G.edges[u])
-    return (edges_neighborhood / ((k * (k-1))/2))
+    return edges_neighborhood / ((k * (k - 1)) / 2)
