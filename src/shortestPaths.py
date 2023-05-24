@@ -1,6 +1,7 @@
 from collections import deque
 from src.Graph import Graph
 import multiprocessing
+import random
 import src.CustomExceptions as Exc
 import math
 
@@ -214,3 +215,264 @@ def connected_components(G: Graph):
                 visited.add(node_id)
         components.append(component)
     return components
+
+def diameter_allpairs(G: Graph):
+    """
+    :param G: Graph
+
+    Calculating the Diameter by calculating all-pair-shortest-path and searching for the max-distance between two nodes.
+
+    :return: Diameter of G as Interger
+    """
+    diameter = -math.inf
+    apsp = all_pairs_shortest_path(G)
+    for node1 in apsp:
+        for node2 in apsp[node1]:
+            if apsp[node1][node2] != math.inf and apsp[node1][node2] > diameter:
+                diameter = apsp[node1][node2]
+    return diameter
+
+def breadth_first_search_tree(G: Graph,s,disc,low,time,parent,cut_nodes):
+    """
+    :param G:
+
+    Finds the Nodes that when they get deleted will create two new connected components.
+    It's using the Tarjan’s Algorithm and therefore will create an BFS-Tree
+
+    :return: set of Cut-Nodes
+    """
+
+    low[s] = time;disc[s] = time
+    time = time+1
+    children = 0
+
+    for node in G.get_internal_neighbors(s):
+        if node not in disc:
+            children = children+1
+            parent[node] = s
+            breadth_first_search_tree(G,node,disc,low,time,parent,cut_nodes)
+            low[s] = min(low[s],low[node])
+
+            if s not in parent and children >1:
+                cut_nodes.add(s)
+            if s in parent and parent[s] != None and low[node]>=disc[s]:
+                cut_nodes.add(s)
+        elif(node != parent[s]):
+            low[s] = min(low[s],disc[node])
+
+def find_cut_nodes(G: Graph):
+    """
+    :param G:
+
+    Preparing the Creation of a Breadth_first_search_tree to get the Cut-Nodes
+
+    :return: set of Cut-Nodes
+    """
+    s = random.sample(G.internal_ids_node_ids.keys(), 1)[0]
+    time = 0
+    disc = {}; low = {}; parent = {s:None}; cut_nodes = set()
+    breadth_first_search_tree(G,s,disc,low,time,parent,cut_nodes)
+    return cut_nodes
+
+def not_to_visit_neighbors_subset_nodes(G: Graph):
+    """
+    :param G:
+
+    Finding all Nodes that dont need to be visited in the all pair shortest path for the calculation of the diameter of graph
+
+    :return: set of node_not_to_visit, dict of nodes with the same distance
+    """
+    node_not_to_visit = set()
+    same_distance = dict()
+
+    hash_map = dict()
+    for v in G.internal_ids_node_ids:
+        v_neighbors = G.get_internal_neighbors(v)
+        v_degree = len(v_neighbors)
+        v_neighbors_hash = hash(sum([hash(str(i)) for i in v_neighbors]))
+        if v_neighbors_hash not in hash_map:
+            hash_map[v_neighbors_hash] = v
+        else:
+            same_distance[v] = hash_map[v_neighbors_hash]
+        if v_degree != 1:
+            for u in G.get_internal_grand_neighbors(v):
+                u_neighbors = G.get_internal_neighbors(u)
+                if len(u_neighbors) != 1 and u_neighbors <= v_neighbors:
+                    if v not in same_distance.keys():
+                        node_not_to_visit.add(v)
+
+        elif G.get_node_degree(G.internal_ids_node_ids[list(v_neighbors)[0]]) > 1:
+            node_not_to_visit.add(list(v_neighbors)[0])
+            if v in same_distance:
+                node_not_to_visit.add(v)
+
+    return node_not_to_visit,same_distance
+
+def single_source_shortest_path_opt(G: Graph, s, same_distance_copy,d_max):
+    """
+    :param G:
+    :param s: name of the Graph node for which shortest paths are computed
+
+    Calculates the length of the shortest path from node s to each node in the Graph.
+
+    returns:
+    Dictionary where keys are names of all nodes in the Graph and values
+    are corresponding distances (int). Non-reachable nodes have distance infinite
+
+    """
+    same_distance = same_distance_copy.copy()
+    dist = {}
+    dist[s] = 0
+    if s in same_distance.keys():
+        same_distance.pop(s)
+    elif s in same_distance.values():
+        same_distance.pop(list(same_distance.keys())[list(same_distance.values()).index(s)])
+    visited = {s}
+    visited.update(set(same_distance.values()))
+    next_level = [s]
+    distance = 0
+
+    while next_level:
+        distance += 1
+        child_level = []
+        for u in next_level:
+            for v in G.get_internal_neighbors(u):
+                if v not in visited:
+                    visited.add(v)
+                    child_level.append(v)
+                    external_v = v
+                    dist[external_v] = distance
+            if len(visited) == G.n:
+                break
+        next_level = child_level
+    for node in same_distance.keys():
+        if node in dist.keys():
+            dist[same_distance[node]] = dist[node]
+        elif same_distance[node] in dist.keys():
+            dist[node] = dist[same_distance[node]]
+    if distance-1 == d_max:
+        return dist , True
+    return dist , False
+
+def min_condition(dist,neighbors):
+    """
+    :param dist: Distance-Dictonary of v
+    :param neighbors: All Neighbors of Node v
+
+    Compares the Distance from all w (neighbor of v) to node u. Get the Minimum and the distance for v is distance(w-u) + 1
+
+    :return: Distance-Dictonary of v
+    """
+    dist_v = dist[next(iter(neighbors))].copy()
+    for u in dist_v:
+        min = math.inf
+        for w in neighbors:
+            if dist[w][u] < min:
+                min = dist[w][u]
+        dist_v[u] = min + 1
+    return  dist_v
+
+def all_pair_shortest_path_recursion(G: Graph,dist,v,max_node_degree,same_distance,d_max):
+    """
+    :param G: Graph
+    :param dist: Distance-Dictionary
+    :param v: Node form witch it will be search from
+    :param max_node_degree: Integer for the max_node_degree for witch the breath first search will be run
+    :param same_distance: Nodes that have the same distance dictionary dont need to be visited both.
+    :param d_max:
+
+    Calculation of the Distance Dictionary for node v. If all Distance for the Neighbors of v are known, then it will calculate the Minimum-Condition to get the
+    Distance for v. If not all distances of the neighbor of v are known than:
+    1) If Node-Degree is <= max_node_degree it will calculate the Distance-Dictionary of v by breath first search
+    2) If Node-Degree is > max_node_degree it will calculate the Distance-Dictionary of all neighbors by breath first search and then will Distance-Dictionary of v
+    wit the Minimum-Condition
+
+    :return: The Distance of two nodes if the Condition for the max-Diameter (dia = 2*max(distance of random node))
+    """
+    dist_v = {}
+    all_distance_known = True
+    neighbors = G.get_internal_neighbors(v)
+
+    for w in neighbors:
+        if w not in dist:
+            all_distance_known = False
+
+
+    if all_distance_known and neighbors != set():
+        dist_v = min_condition(dist,neighbors)
+    elif G.get_node_degree(G.internal_ids_node_ids[v]) <= max_node_degree and neighbors != set():
+        dist[v], found_diameter = single_source_shortest_path_opt(G, v, same_distance, d_max)
+        if found_diameter:
+            return d_max
+        return
+    else:
+        for w in neighbors:
+            if w not in dist:
+                dist[w], found_diameter = single_source_shortest_path_opt(G, w,same_distance,d_max)
+                if found_diameter:
+                    return d_max
+        dist_v = min_condition(dist,neighbors)
+
+
+    dist[v] = dist_v
+    for w in G.get_neighbors(G.internal_ids_node_ids[v]):
+        dist[v][w] = 1
+    dist[v][G.internal_ids_node_ids[v]] = 0
+
+def all_pairs_shortest_path_opt(G: Graph,max_node_degree,node_not_to_visit,same_distance):
+    """
+    :param G: Graph
+    :param max_node_degree: Integer for the max_node_degree for witch the breath first search will be run
+    :param node_not_to_visit: Nodes that dont need to be visited for the calculation of the Diameter.
+    :param same_distance: Nodes that have the same distance dictionary dont need to be visited both.
+
+    Made an Appraisal for the larges possible Diameter. Then will calculate the all_pair_shortest_path for every node.
+
+    :return: The Distance-Dictionary of every node that not in node_not_to_visit and in G OR It will return the diameter if the Algo finds a diameter that will be equal to the larges possible Diameter.
+    """
+    dist = {}
+    all_nodes = set(G.node_ids_internal_ids.values()).difference(node_not_to_visit)
+
+    d_max = math.inf
+    if len(node_not_to_visit) != 0:
+        v = node_not_to_visit.copy().pop()
+        dist[v] = single_source_shortest_path_opt(G, v, same_distance,math.inf)[0]
+        d_max = 2*max(dist[v].values())
+
+
+    for v in all_nodes:
+        if v not in dist:
+            diameter = all_pair_shortest_path_recursion(G,dist,v,max_node_degree,same_distance,d_max)
+            if diameter != None:
+                return diameter
+    return dist
+
+def diameter_opt(G: Graph,max_node_degree):
+    """
+    :param G: The complet Graph. Dont need to be connected
+    :param max_node_degree: Integer for the max_node_degree for witch the breath first search will be run
+
+    Calculation all Pair-Shortest-Path for each node except for nodes_not_to_visit or cut-nodes. This node can not be the start or end Node of an shortest path that define the diameter of G.
+
+    :return: The Diameter of the Graph G as Integer
+    """
+    diameter = -math.inf
+
+    sub_graph = max(connected_components(G), key=len)
+    for node in G.get_nodes():
+        if node not in sub_graph:
+            G.remove_node(node)
+
+    node_not_to_visit, same_dist = not_to_visit_neighbors_subset_nodes(G)
+    node_not_to_visit.update(find_cut_nodes(G))
+
+    apsp = all_pairs_shortest_path_opt(G,max_node_degree,node_not_to_visit,same_dist)
+
+    if type(apsp) != int:
+        for node in apsp:
+            d = max(apsp[node].values())
+            if d > diameter:
+                diameter = d
+        return diameter
+    else:
+        return apsp
