@@ -1,5 +1,5 @@
 from unittest import TestCase
-import HelperClass
+import test_.HelperClass as HelperClass
 import src.triangleAlgorithms as tri
 
 

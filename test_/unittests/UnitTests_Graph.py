@@ -1,5 +1,5 @@
 from unittest import TestCase
-import HelperClass as HelperClass
+import test_.HelperClass as HelperClass
 import src.CustomExceptions as Exc
 import unittest
 
@@ -102,7 +102,7 @@ class TestGraph(TestCase):
         G, n, m = HelperClass.create_graph()
         G.save_graph_as_edge_list("test")
 
-        with open("test.txt") as file:
+        with open("../test.txt") as file:
             line = file.readline().replace("\n", "")
             self.assertEqual(line, "-1 0")
             line = file.readline().replace("\n", "")
@@ -116,7 +116,7 @@ class TestGraph(TestCase):
         G, n, m = HelperClass.create_graph_text()
         G.save_graph_as_edge_list("test")
 
-        with open("test.txt") as file:
+        with open("../test.txt") as file:
             line = file.readline().replace("\n", "")
             self.assertEqual(line, "Node1 2")
             line = file.readline().replace("\n", "")
@@ -148,7 +148,7 @@ class TestGraph(TestCase):
         G, n, m = HelperClass.create_graph()
         G.save_graph_metis("test")
 
-        with open("test.txt") as file:
+        with open("../test.txt") as file:
             line = file.readline().replace("\n", "")
             self.assertEqual(line, f"{n} {m}")
             line = file.readline().replace("\n", "")
@@ -162,7 +162,7 @@ class TestGraph(TestCase):
         G, n, m = HelperClass.create_graph_text()
         G.save_graph_metis("test")
 
-        with open("test.txt") as file:
+        with open("../test.txt") as file:
             line = file.readline().replace("\n", "")
             self.assertEqual(line, "9 6")
             line = file.readline().replace("\n", "")

@@ -1,8 +1,7 @@
 import src.shortestPaths as sP
-import HelperClass as HelperClass
+import test_.HelperClass as HelperClass
 from unittest import TestCase
 import unittest
-import math
 
 
 class TestShortestPaths(TestCase):
