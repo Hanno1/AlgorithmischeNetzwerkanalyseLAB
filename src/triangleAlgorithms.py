@@ -122,6 +122,8 @@ def algorithm_node_iterator_degeneracy_sorting(G: Graph):
 
     for node in degeneracy_ordering:
         neighbors = list(tmpG.get_internal_neighbors(node))
+        if len(neighbors) < 2:
+            continue
         for i in range(0, len(neighbors)-1):
             for j in range(i+1, len(neighbors)):
                 n_i = neighbors[i]
