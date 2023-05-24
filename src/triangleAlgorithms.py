@@ -67,8 +67,8 @@ def algorithm_with_combinations(G: Graph):
     for node in G.internal_ids_node_ids:
         neighbors = list(G.get_internal_neighbors(node))
         for u, v in combinations(neighbors, 2):
-            if v in G.edges[u]:
-                if node < u and node < v:
+            if node < u and node < v:
+                if v in G.edges[u]:
                     number_of_triangles += 1
                     triangles.append((mapping[node], mapping[u], mapping[v]))
     return number_of_triangles, triangles
@@ -136,7 +136,7 @@ def algorithm_node_iterator_degeneracy_sorting(G: Graph):
     return number_triangles, triangles
 
 
-def algorithm_node_iterator(G: Graph):
+def algorithm_node_iterator_simple_sorting(G: Graph):
     """
     trivial Algorithm for getting all triangles in the Graph G
     just look at all pairwise neighbors of all nodes and check if they are connected

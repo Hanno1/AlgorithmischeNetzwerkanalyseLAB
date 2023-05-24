@@ -6,12 +6,12 @@ import src.triangleAlgorithms as tri
 class TestImplementationOnTriangles(TestCase):
     def test_node_iterator(self):
         G, n, m = HelperClass.create_graph()
-        number, triangles = tri.algorithm_node_iterator(G)
+        number, triangles = tri.algorithm_node_iterator_simple_sorting(G)
         self.assertEqual(number, 1)
         self.assertEqual(triangles, [('3', '4', '5')])
 
         G.add_edge(7, 8)
-        number, triangles = tri.algorithm_node_iterator(G)
+        number, triangles = tri.algorithm_node_iterator_simple_sorting(G)
         self.assertEqual(number, 2)
         self.assertEqual(triangles, [('3', '4', '5'), ('6', '7', '8')])
 
