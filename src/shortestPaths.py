@@ -462,6 +462,9 @@ def diameter_opt(G: Graph,max_node_degree):
     for node in G.get_nodes():
         if node not in sub_graph:
             G.remove_node(node)
+            
+    if len(G.get_nodes()) <= 1:
+        return 1
 
     node_not_to_visit, same_dist = not_to_visit_neighbors_subset_nodes(G)
     node_not_to_visit.update(find_cut_nodes(G))
