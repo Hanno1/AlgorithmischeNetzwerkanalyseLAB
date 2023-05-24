@@ -180,15 +180,6 @@ def algorithm_chiba_and_nishizeki(G: Graph):
             marked = dict()
             for i in tmpG.get_internal_neighbors(entry):
                 marked[i] = True
-            # marked = dict(tmpG.get_internal_neighbors(entry))
-            """while marked:
-                node = marked[0]
-                neighbors = list(tmpG.get_internal_neighbors(node))
-                for neighbor in neighbors:
-                    if neighbor in marked:
-                        triangles.append([mapping[entry], mapping[node], mapping[neighbor]])
-                        number_triangles += 1
-                marked.pop(0)"""
             while len(marked) > 0:
                 node = list(marked.keys())[0]
                 neighbors = list(tmpG.get_internal_neighbors(node))
