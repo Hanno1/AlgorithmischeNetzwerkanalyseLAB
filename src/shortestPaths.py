@@ -1,3 +1,4 @@
+import copy
 from collections import deque
 from src.Graph import Graph
 import multiprocessing
@@ -268,7 +269,7 @@ def find_cut_nodes(G: Graph):
 
     :return: set of Cut-Nodes
     """
-    s = random.sample(G.internal_ids_node_ids.keys(), 1)[0]
+    s = random.sample(list(G.internal_ids_node_ids.keys()), 1)[0]
     time = 0
     disc = {}; low = {}; parent = {s:None}; cut_nodes = set()
     breadth_first_search_tree(G,s,disc,low,time,parent,cut_nodes)
@@ -447,9 +448,9 @@ def all_pairs_shortest_path_opt(G: Graph,max_node_degree,node_not_to_visit,same_
                 return diameter
     return dist
 
-def diameter_opt(G: Graph,max_node_degree):
+def diameter_opt(G_original: Graph, max_node_degree):
     """
-    :param G: The complet Graph. Dont need to be connected
+    :param G_original: The complet Graph. Dont need to be connected
     :param max_node_degree: Integer for the max_node_degree for witch the breath first search will be run
 
     Calculation all Pair-Shortest-Path for each node except for nodes_not_to_visit or cut-nodes. This node can not be the start or end Node of an shortest path that define the diameter of G.
@@ -457,12 +458,13 @@ def diameter_opt(G: Graph,max_node_degree):
     :return: The Diameter of the Graph G as Integer
     """
     diameter = -math.inf
+    G = G_original.copy_graph()
 
     sub_graph = max(connected_components(G), key=len)
     for node in G.get_nodes():
         if node not in sub_graph:
             G.remove_node(node)
-            
+
     if len(G.get_nodes()) <= 1:
         return 1
 

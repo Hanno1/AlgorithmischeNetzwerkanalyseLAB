@@ -10,6 +10,8 @@ def density(G: Graph):
     returns: density of a Graph G: float
 
     """
+    if G.n <= 1:
+        return 0.0
     return (2*G.m)/(G.n*(G.n-1))
 
 
