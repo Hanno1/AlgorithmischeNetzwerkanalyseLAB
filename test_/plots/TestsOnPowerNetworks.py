@@ -16,7 +16,7 @@ class TestTriangleImplementationPowerNetworks:
 
     def run(self):
         self.times = []
-        path = "../networks/power_networks/"
+        path = "../../networks/power_networks/"
         files = [path + entry for entry in list(os.listdir(path))]
 
         counter = 0
@@ -59,9 +59,9 @@ class TestTriangleImplementationPowerNetworks:
 
 
 test = TestTriangleImplementationPowerNetworks([tri.algorithm_node_iterator,
-                                                tri.algorithm_node_iterator_without_sorting,
+                                                tri.algorithm_with_combinations,
                                                 tri.algorithm_node_iterator_degeneracy_sorting,
                                                 nx.triangles],
-                                               ["Node Iterator", "Node Iterator, no sorting",
+                                               ["Node Iterator", "using combinations",
                                                 "Node Iterator, degeneracy", "networkX"], [3])
 test.plot_and_run()

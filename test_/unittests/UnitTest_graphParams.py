@@ -1,6 +1,5 @@
 import src.graphParameters as gP
 from src.Graph import Graph
-import HelperClass as HelperClass
 from unittest import TestCase
 import unittest
 import networkx as nx

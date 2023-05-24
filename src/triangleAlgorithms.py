@@ -98,7 +98,7 @@ def algorithm_node_iterator_without_sorting(G: Graph):
                 n_j = neighbors[j]
 
                 if tmpG.test_internal_neighbors(n_i, n_j):
-                    triangles.append([mapping[internal_id], mapping[n_i], mapping[n_j]])
+                    triangles.append((mapping[internal_id], mapping[n_i], mapping[n_j]))
                     number_triangles += 1
         tmpG.remove_node(mapping[internal_id])
     return number_triangles, triangles
@@ -128,7 +128,7 @@ def algorithm_node_iterator_degeneracy_sorting(G: Graph):
                 n_j = neighbors[j]
 
                 if tmpG.test_internal_neighbors(n_i, n_j):
-                    triangles.append([mapping[node], mapping[n_i], mapping[n_j]])
+                    triangles.append((mapping[node], mapping[n_i], mapping[n_j]))
                     number_triangles += 1
         tmpG.remove_node(mapping[node])
     return number_triangles, triangles
@@ -164,8 +164,8 @@ def algorithm_node_iterator(G: Graph):
                     n_i = neighbors[i]
                     n_j = neighbors[j]
 
-                    if tmpG.test_internal_neighbors(n_i, n_j):
-                        triangles.append([mapping[entry], mapping[n_i], mapping[n_j]])
+                    if n_i in tmpG.edges[n_j]:
+                        triangles.append((mapping[entry], mapping[n_i], mapping[n_j]))
                         number_triangles += 1
             tmpG.remove_node(mapping[entry])
     return number_triangles, triangles
@@ -203,7 +203,7 @@ def algorithm_chiba_and_nishizeki(G: Graph):
                 neighbors = list(tmpG.get_internal_neighbors(node))
                 for neighbor in neighbors:
                     if neighbor in marked:
-                        triangles.append([mapping[entry], mapping[node], mapping[neighbor]])
+                        triangles.append((mapping[entry], mapping[node], mapping[neighbor]))
                         number_triangles += 1
                 del marked[node]
             tmpG.remove_node(mapping[entry])
