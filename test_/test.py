@@ -1,20 +1,14 @@
 import networkx as nx
 
 import HelperClass
-import src.triangleAlgorithms as tri
-from src.Graph import Graph as Graph
-from src.printGraph import draw_graph
-import networkx
+import src.networkCentrality.myCentrality as Nc
 
 
 G, _, _ = HelperClass.create_graph()
 G_ = nx.Graph()
-G.add_edge(7, 8)
-# G = Graph()
-# print(tri.algorithm_trivial(G))
-# print(tri.algorithm_chiba_and_nishizeki_dict(G))
-# print(tri.algorithm_edge_iterator(G))
-# print(tri.algorithm_chiba_and_nishizeki(G))
-# print(nx.triangles(G_))
-print(tri.algorithm_with_combinations(G))
-# G = Graph("test.txt", Graph.READ_MOD_METIS)
+
+cent = Nc.OwnCentrality(G)
+print(cent.single_node_centrality(4))
+print(cent.all_nodes_centrality(10))
+print(cent.most_central_node())
+print(cent.k_central_nodes(3))
