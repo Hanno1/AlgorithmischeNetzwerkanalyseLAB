@@ -197,17 +197,15 @@ def algorithm_chiba_and_nishizeki(G: Graph):
 
     for key in sorted_keys:
         for entry in vertices_dict[key]:
-            marked = dict()
-            for i in tmpG.get_internal_neighbors(entry):
-                marked[i] = True
+            marked = list(tmpG.get_internal_neighbors(entry))
             while len(marked) > 0:
-                node = list(marked.keys())[0]
+                node = marked[0]
                 neighbors = list(tmpG.get_internal_neighbors(node))
                 for neighbor in neighbors:
                     if neighbor in marked:
                         triangles.append((mapping[entry], mapping[node], mapping[neighbor]))
                         number_triangles += 1
-                del marked[node]
+                marked.remove(node)
             tmpG.remove_node(mapping[entry])
     return number_triangles, triangles
 

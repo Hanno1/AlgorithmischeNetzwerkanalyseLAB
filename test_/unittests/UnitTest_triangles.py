@@ -24,9 +24,10 @@ class TestImplementationOnTriangles(TestCase):
         G.add_edge(7, 8)
         number, triangles = tri.algorithm_chiba_and_nishizeki(G)
         self.assertEqual(number, 2)
-        self.assertEqual(triangles, [('3', '4', '5'), (')6', '7', '8')])
 
-    def test_edge_iterator(self):
+        self.assertEqual(triangles, [('3', '4', '5'), ('6', '7', '8')])
+
+    def test_combinations(self):
         G, n, m = HelperClass.create_graph()
         number, triangles = tri.algorithm_with_combinations(G)
         self.assertEqual(number, 1)
