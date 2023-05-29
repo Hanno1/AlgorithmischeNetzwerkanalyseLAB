@@ -89,6 +89,79 @@ def degeneracy(G: Graph):
 
     return degeneracy, degeneracy_order
 
+class BucketQueue():
+    def __init__(self,max_prio):
+        self.buckets = defaultdict(set)
+        self.pointer = max_prio
+        self.max_prio = max_prio
+
+    def update_pointer(self,start = 1):
+        for i in range(start,self.max_prio):
+            if self.buckets[i]:
+                self.pointer = i
+                self.isempty = False
+                return
+        self.pointer = self.max_prio
+
+    def put(self, x):
+        prio, node = x
+        self.buckets[prio].add(node)
+        if prio<self.pointer:
+            self.pointer = prio
+    
+    def empty(self):
+        if self.pointer == self.max_prio:
+            return True
+        return False
+
+    def move_down(self, x):
+        prio, node = x
+        self.buckets[prio+1].remove(node)
+        if prio > 0:
+            self.buckets[prio].add(node)
+            if self.pointer > prio:
+                self.pointer = prio
+        else:
+            self.update_pointer(start=1)
+
+    def get(self):
+        e = self.buckets[self.pointer].pop()
+        if len(self.buckets[self.pointer]) == 0:
+            self.update_pointer(start=self.pointer)
+        return self.pointer,e
+            
+def degeneracy_bucket(G: Graph):
+    degree_queue = BucketQueue(max_degree(G))
+    node_to_deg = {} # maps node to its degree
+    degeneracy_order = []
+
+    for node in G.internal_ids_node_ids:
+        degree = len(G.edges[node])
+        node_to_deg[node] = degree
+        degree_queue.put((degree, node))
+
+    degeneracy = 0
+    while not degree_queue.empty():
+        deg, node = degree_queue.get()
+
+        if node not in node_to_deg:
+            continue
+
+        degeneracy_order.append(G.internal_ids_node_ids[node])
+
+        del node_to_deg[node]
+
+        if deg > degeneracy:
+            degeneracy = deg
+            
+        neighbors = set(G.get_internal_neighbors(node))
+        for n in neighbors:
+            if n in node_to_deg.keys():
+                node_to_deg[n] -= 1
+                degree_queue.move_down((node_to_deg[n], n))
+
+    return degeneracy, degeneracy_order
+
 
 def k_core_decomposition(G:Graph):
     """
