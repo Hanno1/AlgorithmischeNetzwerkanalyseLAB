@@ -109,12 +109,12 @@ class OwnCentrality:
 
         max_centrality = 0
         most_central_nodes = []
-        eps = np.finfo(float).eps
         for node in result:
-            if result[node] > max_centrality:
-                max_centrality = result[node]
+            current_centr = round(result[node], 4)
+            if current_centr > max_centrality:
+                max_centrality = current_centr
                 most_central_nodes = [node]
-            elif result[node] == max_centrality:
+            elif current_centr == max_centrality:
                 most_central_nodes.append(node)
         return most_central_nodes, max_centrality
 
