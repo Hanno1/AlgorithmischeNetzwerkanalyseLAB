@@ -1,4 +1,5 @@
 from src.Graph import Graph
+from src.networkCentrality.myCentrality import OwnCentrality
 
 
 def create_graph():
@@ -53,6 +54,18 @@ def create_graph_text():
     G.add_edge(":)", ":(")
 
     return G, 9, 6
+
+
+def create_own_centrality(G: Graph):
+    return OwnCentrality(G)
+
+
+def create_own_centrality_init(G: Graph, init):
+    return OwnCentrality(G, init=init)
+
+
+def create_own_centrality_fast(G: Graph, k):
+    return OwnCentrality(G, k_uniform_nodes=k)
 
 
 def read_graph_as_edge_list(path):

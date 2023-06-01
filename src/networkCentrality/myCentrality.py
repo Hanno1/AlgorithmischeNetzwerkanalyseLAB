@@ -102,7 +102,8 @@ class OwnCentrality:
 
     def most_central_node(self):
         """
-        :return: the most central node and the corresponding centrality - it will only return 1 node though!
+        :return: the most central node and the corresponding centrality - it will return all nodes with the maximal
+        centrality
         """
         result = self.all_nodes_centrality()
 
@@ -113,7 +114,7 @@ class OwnCentrality:
             if result[node] > max_centrality:
                 max_centrality = result[node]
                 most_central_nodes = [node]
-            elif max_centrality - eps < result[node] < max_centrality + eps:
+            elif result[node] == max_centrality:
                 most_central_nodes.append(node)
         return most_central_nodes, max_centrality
 
