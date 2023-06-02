@@ -3,12 +3,14 @@ import test_.HelperClass as Hc
 import src.Graph as Graph
 
 
+def initial_centrality(G: Graph):
+    initial_cent = dict()
+    for node in G.node_ids_internal_ids:
+        initial_cent[node] = G.get_node_degree(node)
+    return initial_cent
+
+
 class TestOwnCentrality(TestCase):
-    def initial_centrality(self, G: Graph):
-        initial_cent = dict()
-        for node in G.node_ids_internal_ids:
-            initial_cent[node] = G.get_node_degree(node)
-        return initial_cent
 
     def test_fast_mode_centrality(self):
         G, _, _ = Hc.create_graph()
@@ -32,7 +34,7 @@ class TestOwnCentrality(TestCase):
         self.assertAlmostEqual(centr.single_node_centrality(8), 1.25, decimal_place)
         self.assertAlmostEqual(centr.single_node_centrality(15), 0, decimal_place)
 
-        initial_centr = self.initial_centrality(G)
+        initial_centr = initial_centrality(G)
         centr = Hc.create_own_centrality_init(G, initial_centr)
 
         self.assertAlmostEqual(centr.single_node_centrality(1), 3.19, decimal_place)
@@ -52,7 +54,7 @@ class TestOwnCentrality(TestCase):
         self.assertAlmostEqual(all_centr["8"], 1.25, decimal_place)
         self.assertAlmostEqual(all_centr["15"], 0, decimal_place)
 
-        initial_centr = self.initial_centrality(G)
+        initial_centr = initial_centrality(G)
         centr = Hc.create_own_centrality_init(G, initial_centr)
         all_centr = centr.all_nodes_centrality()
 
@@ -71,7 +73,7 @@ class TestOwnCentrality(TestCase):
         self.assertEqual(node, ['3'])
         self.assertAlmostEqual(value, 3.25, decimal_place)
 
-        initial_centr = self.initial_centrality(G)
+        initial_centr = initial_centrality(G)
         centr = Hc.create_own_centrality_init(G, initial_centr)
         node, value = centr.most_central_node()
 
@@ -90,7 +92,7 @@ class TestOwnCentrality(TestCase):
         for i in range(len(values)):
             self.assertAlmostEqual(values[i], comp_values[i], decimal_place)
 
-        initial_centr = self.initial_centrality(G)
+        initial_centr = initial_centrality(G)
         centr = Hc.create_own_centrality_init(G, initial_centr)
         nodes, values = centr.k_central_nodes(3)
 

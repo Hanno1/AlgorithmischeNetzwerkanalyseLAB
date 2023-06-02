@@ -1,4 +1,3 @@
-import numpy as np
 from src.Graph import Graph
 import src.shortestPaths as Sp
 import random
@@ -127,6 +126,9 @@ class OwnCentrality:
         centralities = []
         result = self.all_nodes_centrality()
 
+        additional_nodes = []
+        additional_centrality = 0
+
         for node in result:
             centrality = result[node]
             if len(k_central_nodes) < k:
@@ -156,5 +158,13 @@ class OwnCentrality:
                     if not inserted:
                         k_central_nodes.append(node)
                         centralities.append(centrality)
-        return k_central_nodes, centralities
 
+                    if centralities[0] > additional_centrality:
+                        additional_nodes = []
+                if centrality == centralities[0]:
+                    additional_centrality = centrality
+                    additional_nodes.append(node)
+        # if we want a exact result, it may contain more than k nodes
+        """return additional_nodes + k_central_nodes, \
+               [additional_centrality for _ in range(len(additional_nodes))] + centralities"""
+        return k_central_nodes, centralities
