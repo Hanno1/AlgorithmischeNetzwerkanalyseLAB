@@ -1,14 +1,8 @@
-import networkx as nx
+import src.networkCentrality.myCentrality as MyCentr
+import test_.HelperClass as Hc
+from src.printGraph import draw_graph as draw_graph
+from src.Graph import Graph
 
-import HelperClass
-import src.networkCentrality.myCentrality as Nc
 
-
-G, _, _ = HelperClass.create_graph()
-G_ = nx.Graph()
-
-cent = Nc.OwnCentrality(G)
-# print(cent.single_node_centrality(4))
-print(cent.all_nodes_centrality())
-"""print(cent.most_central_node())
-print(cent.k_central_nodes(3))"""
+G = Graph("../networks/out.ucidata-zachary_", mode=Graph.READ_MOD_EDGE_LIST)
+print(MyCentr.ownCentrality(G, k=3))

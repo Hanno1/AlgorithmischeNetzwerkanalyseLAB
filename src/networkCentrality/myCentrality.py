@@ -138,7 +138,7 @@ def _k_central_nodes(k, fast, distances, initial_centrality, p):
                     inserted = True
                     break
             if not inserted:
-                k_central_nodes.append(centrality)
+                k_central_nodes.append(node)
                 centralities.append(centrality)
         else:
             if centrality > centralities[0]:
