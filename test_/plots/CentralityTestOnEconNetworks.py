@@ -2,16 +2,12 @@ import src.networkCentrality.myCentrality as MyCentr
 from src.Graph import Graph
 
 
-def compute_kendall(centr1, centr2, network):
+def compute_kendall(centr1, centr2):
     # https://en.wikipedia.org/wiki/Kendall_rank_correlation_coefficient
-    G = Graph(network)
-    all_centr1 = centr1(G)
-    all_centr2 = centr2(G)
-
     # compute pairs
     pairs = []
-    for key in all_centr1:
-        pairs.append((all_centr1[key], all_centr2[key]))
+    for key in centr1:
+        pairs.append((centr1[key], centr2[key]))
 
     # compare pairs
     number_discord = 0
@@ -24,6 +20,3 @@ def compute_kendall(centr1, centr2, network):
                     (pair1[0] >= pair2[0] and pair1[1] >= pair2[1])):
                 number_discord += 1
     return 1 - ((4 * number_discord) / (len(pairs) * (len(pairs)-1)))
-
-
-print(compute_kendall(MyCentr.ownCentrality, MyCentr.ownCentrality, "../../networks/out.ucidata-zachary_"))

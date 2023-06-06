@@ -57,15 +57,15 @@ def create_graph_text():
 
 
 def create_own_centrality(G: Graph, node=None, k=None):
-    return MyCentr.ownCentrality(G, node=node, k=k)
+    return MyCentr.own_centrality(G, node=node, k=k)
 
 
 def create_own_centrality_init(G: Graph, init, node=None, k=None):
-    return MyCentr.ownCentrality(G, init=init, node=node, k=k)
+    return MyCentr.own_centrality(G, init=init, node=node, k=k)
 
 
 def create_own_centrality_fast(G: Graph, k_uni, node=None, k=None):
-    return MyCentr.ownCentrality(G, k_uniform_nodes=k_uni, node=node, k=k)
+    return MyCentr.own_centrality(G, k_uniform_nodes=k_uni, node=node, k=k)
 
 
 def read_graph_as_edge_list(path):

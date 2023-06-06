@@ -1,9 +1,10 @@
 from src.Graph import Graph
 import src.shortestPaths as Sp
 import random
+import numpy as np
 
 
-def ownCentrality(G: Graph, p=2, init=None, k_uniform_nodes=None, node=None, k=None):
+def own_centrality_approx(G: Graph, p=2, init=None, k_uniform_nodes=None, node=None, k=None):
     """
     computes my own Centrality for the given parameters
     There is a fast Mode, since it might be impractical to compute n BFS's there we approximate the centrality
@@ -22,6 +23,9 @@ def ownCentrality(G: Graph, p=2, init=None, k_uniform_nodes=None, node=None, k=N
     if node and k:
         raise Exception("Invalid combination of Arguments: Either get top k nodes or centrality for one specific node.")
 
+    if not k_uniform_nodes:
+        k_uniform_nodes = max(int(np.sqrt(G.n)), 10)  # choosing a "moderate amount" of nodes. just an estimation
+
     # given initial value?
     if init is not None:
         initial_centrality = init
@@ -31,17 +35,49 @@ def ownCentrality(G: Graph, p=2, init=None, k_uniform_nodes=None, node=None, k=N
             initial_centrality[v] = 1
 
     distances = dict()
-    # fast or slow mode
-    if k_uniform_nodes:
-        fast = True
-        all_nodes = list(G.node_ids_internal_ids.keys())
-        # choose uniform k_centrality nodes
-        for _ in range(k_uniform_nodes):
-            v = random.choice(all_nodes)
-            distances[v] = Sp.single_source_shortest_path(G, v)
+    fast = True
+    all_nodes = list(G.node_ids_internal_ids.keys())
+    # choose uniform k_centrality nodes
+    for _ in range(k_uniform_nodes):
+        v = random.choice(all_nodes)
+        distances[v] = Sp.single_source_shortest_path(G, v)
+
+    if node and not k:
+        return _single_node_centrality(fast, node, distances, initial_centrality, p)
+    elif k and not node:
+        return _k_central_nodes(k, fast, distances, initial_centrality, p)
+    return _all_nodes_centrality(fast, distances, initial_centrality, p)
+
+
+def own_centrality(G: Graph, p=2, init=None, node=None, k=None):
+    """
+    computes my own Centrality for the given parameters
+    There is a fast Mode, since it might be impractical to compute n BFS's there we approximate the centrality
+    by using the distances to k_uniform_nodes which are uniformly chosen from the Graph G.
+
+    :param G: Graph Object
+    :param p: power of centrality scaling
+    :param init: initial centrality as a dictionary, if this is None, all centrality will be set to 0
+    :param node: if this is not None, the algorithm will return the centrality of the given node
+    :param k: if this is not None, the algorithm will return the nodes
+    :return: - if node is provided: Centrality of the given node
+    - if k is provided: top k central nodes with the centrality
+    - neither k nor node -> Dictionary with all centrality
+    """
+    if node and k:
+        raise Exception("Invalid combination of Arguments: Either get top k nodes or centrality for one specific node.")
+
+    # given initial value?
+    if init is not None:
+        initial_centrality = init
     else:
-        fast = False
-        distances = Sp.all_pairs_shortest_path_single(G)
+        initial_centrality = dict()
+        for v in G.node_ids_internal_ids:
+            initial_centrality[v] = 1
+
+    # fast or slow mode
+    fast = False
+    distances = Sp.all_pairs_shortest_path_single(G)
 
     if node and not k:
         return _single_node_centrality(fast, node, distances, initial_centrality, p)
@@ -122,10 +158,6 @@ def _k_central_nodes(k, fast, distances, initial_centrality, p):
     k_central_nodes = []
     centralities = []
     result = _all_nodes_centrality(fast, distances, initial_centrality, p)
-
-    additional_nodes = []
-    additional_centrality = 0
-
     for node in result:
         centrality = result[node]
         if len(k_central_nodes) < k:
@@ -155,13 +187,4 @@ def _k_central_nodes(k, fast, distances, initial_centrality, p):
                 if not inserted:
                     k_central_nodes.append(node)
                     centralities.append(centrality)
-
-                if centralities[0] > additional_centrality:
-                    additional_nodes = []
-            if centrality == centralities[0]:
-                additional_centrality = centrality
-                additional_nodes.append(node)
-    # if we want a exact result, it may contain more than k nodes
-    """return additional_nodes + k_central_nodes, \
-           [additional_centrality for _ in range(len(additional_nodes))] + centralities"""
     return k_central_nodes, centralities

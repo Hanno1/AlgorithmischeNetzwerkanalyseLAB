@@ -5,4 +5,4 @@ from src.Graph import Graph
 
 
 G = Graph("../networks/out.ucidata-zachary_", mode=Graph.READ_MOD_EDGE_LIST)
-print(MyCentr.ownCentrality(G, k=3))
+print(MyCentr.own_centrality(G, k=3))
