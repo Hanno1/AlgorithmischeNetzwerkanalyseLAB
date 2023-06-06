@@ -1,7 +1,3 @@
-import src.networkCentrality.myCentrality as MyCentr
-from src.Graph import Graph
-
-
 def compute_kendall(centr1, centr2):
     # https://en.wikipedia.org/wiki/Kendall_rank_correlation_coefficient
     # compute pairs
