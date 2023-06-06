@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import random
 
 
-def generate_and_translate_graph(n, m, netx=False):
+def generate_and_translate_graph(n, m, netx):
     if m is None:
         newG = nx.complete_graph(n)
     elif m == 0:
@@ -17,7 +17,7 @@ def generate_and_translate_graph(n, m, netx=False):
     return translate_Graph(newG)
 
 
-def generate_gnp_graph(n, p, netx=False):
+def generate_gnp_graph(n, p, netx):
     newG = nx.gnp_random_graph(n, p)
     if netx:
         return newG
@@ -35,41 +35,47 @@ def translate_Graph(newG):
     return G
 
 
-def test_function(n, m, function, iterations, netx=False, useGnp=False):
+def test_function(n, m, function, iterations, netx, useGnp, param_k):
     start = time.time()
 
     if not useGnp:
-        for _ in range(iterations):
-            graph = generate_and_translate_graph(n, m, netx)
-            function(graph)
+        if param_k is None:
+            for _ in range(iterations):
+                graph = generate_and_translate_graph(n, m, netx)
+                function(graph)
+        else:
+            for _ in range(iterations):
+                graph = generate_and_translate_graph(n, m, netx)
+                function(graph, k_uniform_nodes=param_k)
     else:
-        # compute m
-        # k = binom(n, 2)
-        # new_m = round(m * k)
-        for _ in range(iterations):
-            # graph = generate_and_translate_graph(n, new_m, netx)
-            graph = generate_gnp_graph(n, m, netx)
-            function(graph)
+        if param_k is None:
+            for _ in range(iterations):
+                graph = generate_gnp_graph(n, m, netx)
+                function(graph)
+        else:
+            for _ in range(iterations):
+                graph = generate_gnp_graph(n, m, netx)
+                function(graph, k_uniform_nodes=param_k)
 
     time_dif = time.time() - start
     return time_dif / iterations
 
 
-def test_and_plot_function_results(n, m, functions, names, iterations=100, netx=None, useGnp=False):
+def test_and_plot_function_results(n, m, functions, names, param_k, netx, useGnp, iterations):
     if netx is None:
         netx = []
     time_array = []
     i = 0
     for func in functions:
         if i in netx:
-            time_array.append(test_function(n, m, func, iterations, True, useGnp))
+            time_array.append(test_function(n, m, func, iterations, True, useGnp, param_k))
         else:
-            time_array.append(test_function(n, m, func, iterations, False, useGnp))
+            time_array.append(test_function(n, m, func, iterations, False, useGnp, param_k))
         i += 1
     return time_array
 
 
-def test_and_plot_results(n_array, m_array, functions, names, iterations, colors=None, netx=None, useGnp=False):
+def test_and_plot_results(n_array, m_array, functions, names, iterations, colors=None, netx=None, useGnp=False, param_k=None):
     if colors is None or len(colors) != len(functions):
         colors = []
         for _ in range(len(functions)):
@@ -86,7 +92,7 @@ def test_and_plot_results(n_array, m_array, functions, names, iterations, colors
         for c in range(const_c):
             print(c)
             m = m_array[row][c]
-            time_array = test_and_plot_function_results(n, m, functions, names, iterations, netx, useGnp)
+            time_array = test_and_plot_function_results(n, m, functions, names, param_k, netx, useGnp, iterations)
             axs[row][c].bar([i for i in range(len(time_array))], time_array, label=names, width=0.4, color=colors)
             maxi = max(time_array)
         for c in range(const_c):
@@ -96,14 +102,14 @@ def test_and_plot_results(n_array, m_array, functions, names, iterations, colors
     plt.show()
 
 
-def test_and_plot_fully_connected(n_array, functions, names, iterations, colors=None, netx=None, useGnp=False):
+def test_and_plot_fully_connected(n_array, functions, names, iterations, colors=None, netx=None, useGnp=False, param_k=None):
     if not colors or len(colors) != len(functions):
         colors = ["black" for _ in range(len(functions))]
     fig, axs = plt.subplots(len(n_array), 1)
     counter = 0
     for n in n_array:
         m = None
-        time_array = test_and_plot_function_results(n, m, functions, names, iterations, netx, useGnp)
+        time_array = test_and_plot_function_results(n, m, functions, names, iterations, netx, useGnp, param_k)
         axs[counter].bar([i for i in range(len(time_array))], time_array, label=names, width=0.4, color=colors)
         counter += 1
     plt.legend(loc="lower center", bbox_to_anchor=(0, 0, 1, 2), ncol=2, bbox_transform=plt.gcf().transFigure)

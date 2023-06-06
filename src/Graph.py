@@ -1,5 +1,3 @@
-import sys
-
 import src.CustomExceptions as Exc
 import numpy as np
 
