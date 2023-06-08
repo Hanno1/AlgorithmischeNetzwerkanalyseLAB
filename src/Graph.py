@@ -209,6 +209,22 @@ class Graph:
 
         self.n -= 1
 
+    def remove_internal_node(self, internal_idx):
+        # remove node and all connections to other nodes
+        if internal_idx not in self.internal_ids_node_ids:
+            raise Exc.NodeDoesNotExistException(internal_idx)
+
+        for c in self.edges[internal_idx]:
+            self.edges[c].remove(internal_idx)
+            self.m -= 1
+
+        del self.edges[internal_idx]
+
+        del self.node_ids_internal_ids[self.internal_ids_node_ids[internal_idx]]
+        del self.internal_ids_node_ids[internal_idx]
+
+        self.n -= 1
+
     def add_edge(self, id1, id2):
         """
         add an edge between node id1 and id2. If the nodes do not exists we create them automatically.

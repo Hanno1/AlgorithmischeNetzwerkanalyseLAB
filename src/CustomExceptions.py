@@ -23,6 +23,11 @@ class NodeDoesNotExistException(Exception):
         super().__init__(f"Node with id {idx} does not exist!")
 
 
+class InternalNodeDoesNotExistException(Exception):
+    def __init__(self, idx):
+        super().__init__(f"Internal Node with id {idx} does not exist!")
+
+
 class EdgeDoesNotExistException(Exception):
     def __init__(self, idx1, idx2):
         super().__init__(f"Edge between id {idx1} and {idx2} does not exist!")
