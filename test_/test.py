@@ -1,8 +1,29 @@
-import src.networkCentrality.myCentrality as MyCentr
-import test_.HelperClass as Hc
-from src.printGraph import draw_graph as draw_graph
+import src.communities.two_plexe as Tp
+import src.shortestPaths as Sp
 from src.Graph import Graph
 
 
-G = Graph("../networks/out.ucidata-zachary_", mode=Graph.READ_MOD_EDGE_LIST)
-print(MyCentr.own_centrality(G, k=3))
+G = Graph("../../networks/out.ucidata-zachary_")
+
+all_pairs_shortest_paths = Sp.all_pairs_shortest_path_single(G)
+
+print(Tp._search_2_plex_rec_orig(G, G.get_nodes(), []))
+print(Tp._search_2_plex_rec_first(G, G.get_nodes(), [], []))
+print(Tp._search_2_plex_rec_second(G, all_pairs_shortest_paths, G.get_nodes(), [], []))
+print(Tp._search_2_plex_rec_third(G, all_pairs_shortest_paths, G.get_nodes(), [], []))
+print(Tp._search_2_plex_rec_fourth(G, all_pairs_shortest_paths, G.get_nodes(), [], []))
+
+"""
+G = Graph("../../networks/out.ucidata-zachary_")
+
+all_pairs_shortest_paths = Sp.all_pairs_shortest_path_single(G)
+
+nodes = list(G.node_ids_internal_ids.keys())
+nodes.sort()
+
+print(search_2_plex_rec_orig(G, nodes, []))
+print(search_2_plex_rec_first(G, nodes, [], []))
+print(search_2_plex_rec_second(G, all_pairs_shortest_paths, nodes, [], []))
+print(search_2_plex_rec_third(G, all_pairs_shortest_paths, nodes, [], []))
+print(search_2_plex_rec_fourth(G, all_pairs_shortest_paths, nodes, [], []))
+"""

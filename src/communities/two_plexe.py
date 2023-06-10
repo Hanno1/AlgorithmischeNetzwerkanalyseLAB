@@ -12,7 +12,25 @@ def test_2_plex(g: Graph, nodes):
     return True
 
 
-def search_2_plex_rec_orig(orig_graph: Graph, actual_nodes, max_2_plex):
+def search_2_plex(orig_graph: Graph, version=0):
+    actual_nodes = orig_graph.get_nodes()
+    if version == 0:
+        res = _search_2_plex_rec_orig(orig_graph, actual_nodes, [])
+    elif version == 1:
+        res = _search_2_plex_rec_first(orig_graph, actual_nodes, [], [])
+    elif version == 2:
+        all_distances = Sp.all_pairs_shortest_path_single(orig_graph)
+        res = _search_2_plex_rec_second(orig_graph, all_distances, actual_nodes, [], [])
+    elif version == 3:
+        all_distances = Sp.all_pairs_shortest_path_single(orig_graph)
+        res = _search_2_plex_rec_third(orig_graph, all_distances, actual_nodes, [], [])
+    else:
+        all_distances = Sp.all_pairs_shortest_path_single(orig_graph)
+        res = _search_2_plex_rec_fourth(orig_graph, all_distances, actual_nodes, [], [])
+    return res
+
+
+def _search_2_plex_rec_orig(orig_graph: Graph, actual_nodes, max_2_plex):
     current_n = len(actual_nodes)
     if test_2_plex(orig_graph, actual_nodes):
         if len(actual_nodes) > len(max_2_plex):
@@ -23,7 +41,7 @@ def search_2_plex_rec_orig(orig_graph: Graph, actual_nodes, max_2_plex):
         if len(neighbors_v) < current_n - 2:
             actual_nodes.remove(v)
 
-            res = search_2_plex_rec_orig(orig_graph, actual_nodes, max_2_plex)
+            res = _search_2_plex_rec_orig(orig_graph, actual_nodes, max_2_plex)
             if res:
                 max_2_plex = res
 
@@ -33,14 +51,14 @@ def search_2_plex_rec_orig(orig_graph: Graph, actual_nodes, max_2_plex):
             not_neighbors = actual_nodes - (neighbors_v | {v})
             actual_nodes = neighbors_v | {v}
             # none of the not neighbors
-            res = search_2_plex_rec_orig(orig_graph, actual_nodes, max_2_plex)
+            res = _search_2_plex_rec_orig(orig_graph, actual_nodes, max_2_plex)
             if res:
                 max_2_plex = res
 
             # at most one of the not neighbors
             for u in not_neighbors:
                 actual_nodes.add(u)
-                res = search_2_plex_rec_orig(orig_graph, actual_nodes, max_2_plex)
+                res = _search_2_plex_rec_orig(orig_graph, actual_nodes, max_2_plex)
                 if res:
                     max_2_plex = res
                 actual_nodes.remove(u)
@@ -48,7 +66,7 @@ def search_2_plex_rec_orig(orig_graph: Graph, actual_nodes, max_2_plex):
     return max_2_plex
 
 
-def search_2_plex_rec_first(orig_graph: Graph, actual_nodes, permanent, max_2_plex):
+def _search_2_plex_rec_first(orig_graph: Graph, actual_nodes, permanent, max_2_plex):
     current_n = len(actual_nodes)
     if test_2_plex(orig_graph, actual_nodes):
         if current_n > len(max_2_plex):
@@ -58,11 +76,11 @@ def search_2_plex_rec_first(orig_graph: Graph, actual_nodes, permanent, max_2_pl
         neighbors_v = orig_graph.get_neighbors(v) & actual_nodes
         if len(neighbors_v) == current_n - 1:
             permanent.append(v)
-            search_2_plex_rec_first(orig_graph, actual_nodes, permanent, max_2_plex)
+            _search_2_plex_rec_first(orig_graph, actual_nodes, permanent, max_2_plex)
             permanent.remove(v)
         elif len(neighbors_v) < current_n - 2:
             actual_nodes.remove(v)
-            res = search_2_plex_rec_first(orig_graph, actual_nodes, permanent, max_2_plex)
+            res = _search_2_plex_rec_first(orig_graph, actual_nodes, permanent, max_2_plex)
             if res:
                 max_2_plex = res
             actual_nodes.add(v)
@@ -73,14 +91,14 @@ def search_2_plex_rec_first(orig_graph: Graph, actual_nodes, permanent, max_2_pl
             not_neighbors = actual_nodes - (neighbors_v | {v})
             actual_nodes = neighbors_v | {v}
             # none of the not neighbors
-            res = search_2_plex_rec_first(orig_graph, actual_nodes, permanent, max_2_plex)
+            res = _search_2_plex_rec_first(orig_graph, actual_nodes, permanent, max_2_plex)
             if res:
                 max_2_plex = res
 
             # at most one of the not neighbors
             for u in not_neighbors:
                 actual_nodes.add(u)
-                res = search_2_plex_rec_first(orig_graph, actual_nodes, permanent, max_2_plex)
+                res = _search_2_plex_rec_first(orig_graph, actual_nodes, permanent, max_2_plex)
                 if res:
                     max_2_plex = res
                 actual_nodes.remove(u)
@@ -91,7 +109,7 @@ def search_2_plex_rec_first(orig_graph: Graph, actual_nodes, permanent, max_2_pl
     return max_2_plex
 
 
-def search_2_plex_rec_second(orig_graph: Graph, all_distances, actual_nodes, permanent, max_2_plex):
+def _search_2_plex_rec_second(orig_graph: Graph, all_distances, actual_nodes, permanent, max_2_plex):
     current_n = len(actual_nodes)
     if test_2_plex(orig_graph, actual_nodes):
         if current_n > len(max_2_plex):
@@ -103,7 +121,10 @@ def search_2_plex_rec_second(orig_graph: Graph, all_distances, actual_nodes, per
     remove = set()
     for node in working_set:
         for permanent_node in permanent:
-            if all_distances[node][permanent_node] >= 3:
+            if permanent_node in all_distances[node]:
+                if all_distances[node][permanent_node] >= 3:
+                    remove.add(node)
+            else:
                 remove.add(node)
     working_set = (working_set | set(permanent)) - remove
     current_n = len(working_set)
@@ -111,11 +132,11 @@ def search_2_plex_rec_second(orig_graph: Graph, all_distances, actual_nodes, per
         neighbors_v = orig_graph.get_neighbors(v) & working_set
         if len(neighbors_v) == current_n - 1:
             permanent.append(v)
-            search_2_plex_rec_second(orig_graph, all_distances, working_set, permanent, max_2_plex)
+            _search_2_plex_rec_second(orig_graph, all_distances, working_set, permanent, max_2_plex)
             permanent.remove(v)
         elif len(neighbors_v) < current_n - 2:
             working_set.remove(v)
-            res = search_2_plex_rec_second(orig_graph, all_distances, working_set, permanent, max_2_plex)
+            res = _search_2_plex_rec_second(orig_graph, all_distances, working_set, permanent, max_2_plex)
             if res:
                 max_2_plex = res
             working_set.add(v)
@@ -126,14 +147,14 @@ def search_2_plex_rec_second(orig_graph: Graph, all_distances, actual_nodes, per
             not_neighbors = working_set - (neighbors_v | {v})
             working_set = neighbors_v | {v}
             # none of the not neighbors
-            res = search_2_plex_rec_second(orig_graph, all_distances, working_set, permanent, max_2_plex)
+            res = _search_2_plex_rec_second(orig_graph, all_distances, working_set, permanent, max_2_plex)
             if res:
                 max_2_plex = res
 
             # at most one of the not neighbors
             for u in not_neighbors:
                 working_set.add(u)
-                res = search_2_plex_rec_second(orig_graph, all_distances, working_set, permanent, max_2_plex)
+                res = _search_2_plex_rec_second(orig_graph, all_distances, working_set, permanent, max_2_plex)
                 if res:
                     max_2_plex = res
                 working_set.remove(u)
@@ -144,7 +165,7 @@ def search_2_plex_rec_second(orig_graph: Graph, all_distances, actual_nodes, per
     return max_2_plex
 
 
-def search_2_plex_rec_third(orig_graph: Graph, all_distances, actual_nodes, permanent, max_2_plex):
+def _search_2_plex_rec_third(orig_graph: Graph, all_distances, actual_nodes, permanent, max_2_plex):
     current_n = len(actual_nodes)
 
     # third improvement
@@ -161,7 +182,10 @@ def search_2_plex_rec_third(orig_graph: Graph, all_distances, actual_nodes, perm
     remove = set()
     for node in working_set:
         for permanent_node in permanent:
-            if all_distances[node][permanent_node] >= 3:
+            if permanent_node in all_distances[node]:
+                if all_distances[node][permanent_node] >= 3:
+                    remove.add(node)
+            else:
                 remove.add(node)
     working_set = (working_set | set(permanent)) - remove
     current_n = len(working_set)
@@ -169,11 +193,11 @@ def search_2_plex_rec_third(orig_graph: Graph, all_distances, actual_nodes, perm
         neighbors_v = orig_graph.get_neighbors(v) & working_set
         if len(neighbors_v) == current_n - 1:
             permanent.append(v)
-            search_2_plex_rec_third(orig_graph, all_distances, working_set, permanent, max_2_plex)
+            _search_2_plex_rec_third(orig_graph, all_distances, working_set, permanent, max_2_plex)
             permanent.remove(v)
         elif len(neighbors_v) < current_n - 2:
             working_set.remove(v)
-            res = search_2_plex_rec_third(orig_graph, all_distances, working_set, permanent, max_2_plex)
+            res = _search_2_plex_rec_third(orig_graph, all_distances, working_set, permanent, max_2_plex)
             if res:
                 max_2_plex = res
             working_set.add(v)
@@ -184,14 +208,14 @@ def search_2_plex_rec_third(orig_graph: Graph, all_distances, actual_nodes, perm
             not_neighbors = working_set - (neighbors_v | {v})
             working_set = neighbors_v | {v}
             # none of the not neighbors
-            res = search_2_plex_rec_third(orig_graph, all_distances, working_set, permanent, max_2_plex)
+            res = _search_2_plex_rec_third(orig_graph, all_distances, working_set, permanent, max_2_plex)
             if res:
                 max_2_plex = res
 
             # at most one of the not neighbors
             for u in not_neighbors:
                 working_set.add(u)
-                res = search_2_plex_rec_third(orig_graph, all_distances, working_set, permanent, max_2_plex)
+                res = _search_2_plex_rec_third(orig_graph, all_distances, working_set, permanent, max_2_plex)
                 if res:
                     max_2_plex = res
                 working_set.remove(u)
@@ -202,7 +226,7 @@ def search_2_plex_rec_third(orig_graph: Graph, all_distances, actual_nodes, perm
     return max_2_plex
 
 
-def search_2_plex_rec_fourth(orig_graph: Graph, all_distances, actual_nodes, permanent, max_2_plex):
+def _search_2_plex_rec_fourth(orig_graph: Graph, all_distances, actual_nodes, permanent, max_2_plex):
     current_n = len(actual_nodes)
 
     # third improvement
@@ -219,7 +243,10 @@ def search_2_plex_rec_fourth(orig_graph: Graph, all_distances, actual_nodes, per
     remove = set()
     for node in working_set:
         for permanent_node in permanent:
-            if all_distances[node][permanent_node] >= 3:
+            if permanent_node in all_distances[node]:
+                if all_distances[node][permanent_node] >= 3:
+                    remove.add(node)
+            else:
                 remove.add(node)
         # last improvement - remove nodes with at most len(max_2_plex) - 2 neighbors
         neighbors = orig_graph.get_neighbors(node) & working_set
@@ -231,11 +258,11 @@ def search_2_plex_rec_fourth(orig_graph: Graph, all_distances, actual_nodes, per
         neighbors_v = orig_graph.get_neighbors(v) & working_set
         if len(neighbors_v) == current_n - 1:
             permanent.append(v)
-            search_2_plex_rec_third(orig_graph, all_distances, working_set, permanent, max_2_plex)
+            _search_2_plex_rec_fourth(orig_graph, all_distances, working_set, permanent, max_2_plex)
             permanent.remove(v)
         elif len(neighbors_v) < current_n - 2:
             working_set.remove(v)
-            res = search_2_plex_rec_third(orig_graph, all_distances, working_set, permanent, max_2_plex)
+            res = _search_2_plex_rec_fourth(orig_graph, all_distances, working_set, permanent, max_2_plex)
             if res:
                 max_2_plex = res
             working_set.add(v)
@@ -246,14 +273,14 @@ def search_2_plex_rec_fourth(orig_graph: Graph, all_distances, actual_nodes, per
             not_neighbors = working_set - (neighbors_v | {v})
             working_set = neighbors_v | {v}
             # none of the not neighbors
-            res = search_2_plex_rec_third(orig_graph, all_distances, working_set, permanent, max_2_plex)
+            res = _search_2_plex_rec_fourth(orig_graph, all_distances, working_set, permanent, max_2_plex)
             if res:
                 max_2_plex = res
 
             # at most one of the not neighbors
             for u in not_neighbors:
                 working_set.add(u)
-                res = search_2_plex_rec_third(orig_graph, all_distances, working_set, permanent, max_2_plex)
+                res = _search_2_plex_rec_fourth(orig_graph, all_distances, working_set, permanent, max_2_plex)
                 if res:
                     max_2_plex = res
                 working_set.remove(u)
@@ -262,14 +289,3 @@ def search_2_plex_rec_fourth(orig_graph: Graph, all_distances, actual_nodes, per
             permanent.remove(v)
             break
     return max_2_plex
-
-
-G = Graph("../../networks/out.ucidata-zachary_")
-
-all_pairs_shortest_paths = Sp.all_pairs_shortest_path_single(G)
-
-print(search_2_plex_rec_orig(G, G.get_nodes(), []))
-print(search_2_plex_rec_first(G, G.get_nodes(), [], []))
-print(search_2_plex_rec_second(G, all_pairs_shortest_paths, G.get_nodes(), [], []))
-print(search_2_plex_rec_third(G, all_pairs_shortest_paths, G.get_nodes(), [], []))
-print(search_2_plex_rec_fourth(G, all_pairs_shortest_paths, G.get_nodes(), [], []))
