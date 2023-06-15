@@ -74,12 +74,12 @@ def degeneracy(G: Graph):
         if node not in node_to_deg:
             continue
 
+        if deg > degeneracy:
+            degeneracy = deg
+
         degeneracy_order.append(G.internal_ids_node_ids[node])
 
         del node_to_deg[node]
-
-        if deg > degeneracy:
-            degeneracy = deg
             
         neighbors = set(G.get_internal_neighbors(node))
         for n in neighbors:
@@ -117,18 +117,17 @@ class BucketQueue():
     def move_down(self, x):
         prio, node = x
         self.buckets[prio+1].remove(node)
-        if prio > 0:
+        if prio >= 0:
             self.buckets[prio].add(node)
             if self.pointer > prio:
                 self.pointer = prio
-        else:
-            self.update_pointer(start=1)
 
     def get(self):
         e = self.buckets[self.pointer].pop()
+        current_pointer = self.pointer
         if len(self.buckets[self.pointer]) == 0:
             self.update_pointer(start=self.pointer)
-        return self.pointer,e
+        return current_pointer,e
             
 def degeneracy_bucket(G: Graph):
     degree_queue = BucketQueue(max_degree(G))
@@ -147,19 +146,18 @@ def degeneracy_bucket(G: Graph):
         if node not in node_to_deg:
             continue
 
+        if deg > degeneracy:
+            degeneracy = deg
+
         degeneracy_order.append(G.internal_ids_node_ids[node])
 
         del node_to_deg[node]
-
-        if deg > degeneracy:
-            degeneracy = deg
             
         neighbors = set(G.get_internal_neighbors(node))
         for n in neighbors:
             if n in node_to_deg.keys():
                 node_to_deg[n] -= 1
                 degree_queue.move_down((node_to_deg[n], n))
-
     return degeneracy, degeneracy_order
 
 
