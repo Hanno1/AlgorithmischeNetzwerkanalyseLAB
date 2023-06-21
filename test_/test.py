@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import time
 import src.communities.two_plexe as Tp
 import numpy as np
+from src.communities.two_plex_real import two_plex_real
 
 
 """plt.rcParams.update({'font.size': 8})
@@ -35,5 +36,14 @@ plt.title("Laufzeit der Algorithmen")
 plt.legend()
 plt.show()"""
 
-G = Graph("../networks/out.ucidata-zachary_")
-Tp._search_2_plex_rec_test2(G, [], G.get_nodes(), set(), [])
+G = Graph()
+G.add_edge(1, 2)
+G.add_edge(1, 3)
+G.add_edge(2, 4)
+G.add_edge(3, 4)
+G.add_edge(2, 3)
+G.add_edge(4, 5)
+G.add_edge(0, 1)
+
+print(two_plex_real(G))
+print("Done")
