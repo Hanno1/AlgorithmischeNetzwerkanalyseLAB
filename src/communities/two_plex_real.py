@@ -45,15 +45,19 @@ def greedy_plex(G: Graph):
     return current_plex
 
 
-def two_plex_real(G: Graph):
-    gp = greedy_plex(G)
-    l = len(gp)
+def search_2_plex_main(G_: Graph, version=4):
+    G = G_.copy_graph()
     l = 0
-    # remove all nodes with degree <= l - 2
-    nodes = G.get_nodes()
-    for node in nodes:
-        if G.get_node_degree(node) <= l - 2:
-            G.remove_node(node)
+    max_2_plex = set()
+    # first improvement
+    if version > 0:
+        max_2_plex = greedy_plex(G)
+        l = len(max_2_plex)
+        # remove all nodes with degree <= l - 2
+        nodes = G.get_nodes()
+        for node in nodes:
+            if G.get_node_degree(node) <= l - 2:
+                G.remove_node(node)
     deg_sorting = degeneracy(G)[1]
     deg_sorting.reverse()
 
@@ -62,27 +66,39 @@ def two_plex_real(G: Graph):
         tn = two_neighbors(new_G, node)
 
         # remove nodes that are not in the 2-neighborhood, since a two plex has to have diameter 2
-        nodes = new_G.get_nodes()
-        for n in nodes:
-            if n not in tn:
-                new_G.remove_node(n)
+        # third Improvement
+        if version > 1:
+            nodes = new_G.get_nodes()
+            for n in nodes:
+                if n not in tn:
+                    new_G.remove_node(n)
         # remove nodes that have not enough neighbors
-        nodes = new_G.get_nodes()
-        for n in nodes:
-            if new_G.get_node_degree(n) <= l - 2:
-                new_G.remove_node(n)
+        # fourth improvement
+        if version > 3:
+            nodes = new_G.get_nodes()
+            for n in nodes:
+                if new_G.get_node_degree(n) <= l - 2:
+                    new_G.remove_node(n)
 
         # start recursion algorithm for the new Graph
-        search_two_plex(copy.deepcopy(new_G), set())
+        res = search_two_plex_rek(copy.deepcopy(new_G), set(), max_2_plex, version)
+        if res:
+            max_2_plex = res
+            l = len(max_2_plex)
         G.remove_node(node)
+    return max_2_plex
 
 
-def search_two_plex(G, F):
-    if len(G.get_nodes()) <= len(max_2_plex):
-        return None
+def search_two_plex_rek(G, F, max_2_plex, version):
+    # second Improvement
+    if version > 2:
+        if len(G.get_nodes()) <= len(max_2_plex):
+            return None
 
     if test_two_plex_graph(G):
-        return G
+        if len(G.get_nodes()) <= len(max_2_plex):
+            return None
+        return G.get_nodes()
 
     if len(F) > 1:
         l_f = list(F)
@@ -101,13 +117,15 @@ def search_two_plex(G, F):
                         G.remove_node(node)
 
     deg_sorting = degeneracy(G)[1]
-    v = deg_sorting[0]
+    v = deg_sorting[-1]
 
-    # case 1: v is not in G
+    # case 1: v is not in 2plex
     if v not in F:
         new_G = G.copy_graph()
         new_G.remove_node(v)
-        search_two_plex(new_G, copy.deepcopy(F))
+        res = search_two_plex_rek(new_G, copy.deepcopy(F), max_2_plex, version)
+        if res:
+            max_2_plex = res
 
     # case 2: get not neighbors
     F.add(v)
@@ -117,17 +135,17 @@ def search_two_plex(G, F):
             # case 2.1: u is not inside maximum plex
             new_G = G.copy_graph()
             new_G.remove_node(u)
-            search_two_plex(new_G, copy.deepcopy(F))
+            res = search_two_plex_rek(new_G, copy.deepcopy(F), max_2_plex, version)
+            if res:
+                max_2_plex = res
 
             # case 2.2: u is inside -> all others are not
             F.add(u)
             for nn in not_neighbors:
                 if nn != u:
                     G.remove_node(nn)
-            search_two_plex(G, F)
+            res = search_two_plex_rek(G, F, max_2_plex, version)
+            if res:
+                max_2_plex = res
             break
-    return None
-
-
-# G = Graph("../../networks/out.ucidata-zachary_")
-max_2_plex = set()
+    return max_2_plex

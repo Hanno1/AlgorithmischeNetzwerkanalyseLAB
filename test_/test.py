@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import time
 import src.communities.two_plexe as Tp
 import numpy as np
-from src.communities.two_plex_real import two_plex_real
+from src.communities.two_plex_real import search_2_plex_main
 
 
 """plt.rcParams.update({'font.size': 8})
@@ -45,5 +45,7 @@ G.add_edge(2, 3)
 G.add_edge(4, 5)
 G.add_edge(0, 1)
 
-print(two_plex_real(G))
-print("Done")
+print(search_2_plex_main(G.copy_graph(), version=0))
+print(search_2_plex_main(G.copy_graph(), version=1))
+print(search_2_plex_main(G.copy_graph(), version=2))
+print(search_2_plex_main(G, version=3))
