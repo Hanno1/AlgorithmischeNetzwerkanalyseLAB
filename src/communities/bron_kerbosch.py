@@ -1,8 +1,8 @@
 from src.Graph import Graph
 from src.graphParameters import degeneracy, degeneracy_bucket, density
-import time
+from time import time
 
-def bron_kerbosch(G, timeout):
+def bron_kerbosch(G, timeout= 60):
     start_time = time()
     def internal(K, C, F):
         if not C and not F:
@@ -19,7 +19,8 @@ def bron_kerbosch(G, timeout):
     nodes = set(G.node_ids_internal_ids.keys())
     yield from internal(set(), nodes, set())
 
-def find_pivot_bf(G: Graph, C, F): # brute-force maximize C & u_neighbors
+def _find_pivot_bf(G: Graph, C, F, threshold = None): # brute-force maximize C & u_neighbors
+    threshold = threshold if threshold else len(C)-1
     max_eliminated = 0
     C_internal = set([G.node_ids_internal_ids[el] for el in C ])
     F_internal = set([G.node_ids_internal_ids[el] for el in F ])
@@ -29,9 +30,12 @@ def find_pivot_bf(G: Graph, C, F): # brute-force maximize C & u_neighbors
         if eliminated >= max_eliminated:
             max_eliminated=eliminated
             current_u = u
+            if max_eliminated>=threshold:
+                break
     return set([G.internal_ids_node_ids[s] for s in G.edges[current_u]])
 
-def find_pivot_deg(G: Graph, C, F): # brute-force maximize C & u_neighbors
+
+def _find_pivot_deg(G: Graph, C, F): # heuristic: maximize u degree
     max_eliminated = 0
     C_internal = set([G.node_ids_internal_ids[el] for el in C ])
     F_internal = set([G.node_ids_internal_ids[el] for el in F ])
@@ -62,18 +66,26 @@ def bron_kerbosch_pivot_degen(G: Graph, pivot_strategy):
         F = set(order[:i]) & neighbors
         yield from bron_kerbosch_pivot(G, {order[i]}, C, F, pivot_strategy)
 
-def find_cliques(G: Graph, mode = "regular", pivot_strategy=None, timeout = 60):
+def find_cliques(G: Graph, mode = "regular", pivot_strategy=None, timeout_regular = 60):
+    pivot_func = None
+    if pivot_strategy == "brute force":
+        pivot_func = _find_pivot_bf
+    if pivot_strategy == "degree":
+        pivot_func = _find_pivot_deg
     if mode == "regular":
-        yield from bron_kerbosch(G, timeout = timeout)
+        yield from bron_kerbosch(G, timeout = timeout_regular)
+        return
     if mode == "pivot":
         if pivot_strategy is None:
             raise Exception("need to specify a pivot strategy")
         nodes = set(G.node_ids_internal_ids.keys())
-        yield from bron_kerbosch_pivot(G, set(), nodes, set(), pivot_strategy)
+        yield from bron_kerbosch_pivot(G, set(), nodes, set(), pivot_func)
+        return
     if mode == "degeneracy":
         if pivot_strategy is None:
             raise Exception("need to specify a pivot strategy")
-        yield from bron_kerbosch_pivot_degen(G, pivot_strategy)
+        yield from bron_kerbosch_pivot_degen(G, pivot_func)
+        return
 
 if __name__ == "__main__":
     from time import time
@@ -81,9 +93,10 @@ if __name__ == "__main__":
     import pandas as pd
     directory = "../../networks/"
 
-    for params in [("regular",None), ("pivot", find_pivot_bf), ("pivot", find_pivot_deg), ("degeneracy",find_pivot_bf),("degeneracy", find_pivot_deg)]:
-        mode = params[0]
-        pivot_strategy = params[1]
+    versions = [("regular",None), ("pivot", "brute force"), ("pivot", "degree"), ("degeneracy", "brute force"),("degeneracy", "degree")]
+
+    for params in versions:
+        mode, pivot_strategy = params
         df =pd.DataFrame(columns=["filename","nodes","edges","density", "degen","num_cliques", "time","finished"])
         timeout = 60
         for filename in os.listdir(directory):
@@ -93,11 +106,12 @@ if __name__ == "__main__":
                 G = Graph(directory+filename)
             except:
                 G = Graph(directory+filename,mode="metis")
+
             cliques = []
 
             tik = time()
             finished = True
-            for i, clique in enumerate(find_cliques(G, mode = mode, pivot_strategy=pivot_strategy, timeout = 60)):
+            for i, clique in enumerate(find_cliques(G, mode = mode, pivot_strategy=pivot_strategy, timeout_regular = 60)):
                 if isinstance(clique, Exception):
                     finished = False
                 if i % 1000 == 0:
@@ -110,7 +124,6 @@ if __name__ == "__main__":
             dens_G = round(density(G),3)
             degen_G,_ = degeneracy_bucket(G)
             stats = [filename,G.n,G.m,dens_G, degen_G, len(cliques),round(t,3),finished]
-            print(stats)
             df.loc[len(df)] = stats
         print(mode, pivot_strategy)
         print(df)
