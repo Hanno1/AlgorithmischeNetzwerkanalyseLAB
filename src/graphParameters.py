@@ -89,6 +89,7 @@ def degeneracy(G: Graph):
 
     return degeneracy, degeneracy_order
 
+
 class BucketQueue():
     def __init__(self,max_prio):
         self.buckets = defaultdict(set)

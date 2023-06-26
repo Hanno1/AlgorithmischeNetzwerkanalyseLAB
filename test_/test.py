@@ -1,29 +1,51 @@
-import src.communities.two_plexe as Tp
-import src.shortestPaths as Sp
 from src.Graph import Graph
+import matplotlib.pyplot as plt
+import time
+import src.communities.two_plexe as Tp
+import numpy as np
+from src.communities.two_plex_real import search_2_plex_main
 
 
-G = Graph("../../networks/out.ucidata-zachary_")
+"""plt.rcParams.update({'font.size': 8})
+G = Graph("../networks/out.ucidata-zachary_")
+names = ["original", "first\nImprovement", "second\nImprovement",
+         "third\nImprovement", "fourth\nImprovement", "test1", "test2"]
+times = []
+times_det = []
 
-all_pairs_shortest_paths = Sp.all_pairs_shortest_path_single(G)
+for i in range(7):
+    start_time = time.time()
+    Tp.search_2_plex(G, i)
+    times.append(time.time() - start_time)
 
-print(Tp._search_2_plex_rec_orig(G, G.get_nodes(), []))
-print(Tp._search_2_plex_rec_first(G, G.get_nodes(), [], []))
-print(Tp._search_2_plex_rec_second(G, all_pairs_shortest_paths, G.get_nodes(), [], []))
-print(Tp._search_2_plex_rec_third(G, all_pairs_shortest_paths, G.get_nodes(), [], []))
-print(Tp._search_2_plex_rec_fourth(G, all_pairs_shortest_paths, G.get_nodes(), [], []))
+    start_time = time.time()
+    Tpc.search_2_plex_det(G, i)
+    times_det.append(time.time() - start_time)
 
-"""
-G = Graph("../../networks/out.ucidata-zachary_")
+fig = plt.figure(figsize=(7, 3))
 
-all_pairs_shortest_paths = Sp.all_pairs_shortest_path_single(G)
+X_axis = np.arange(len(names))
 
-nodes = list(G.node_ids_internal_ids.keys())
-nodes.sort()
+plt.bar(X_axis - 0.2, times, 0.4, label='nicht deterministisch')
+#plt.bar(X_axis + 0.2, times_det, 0.4, label='deterministisch')
 
-print(search_2_plex_rec_orig(G, nodes, []))
-print(search_2_plex_rec_first(G, nodes, [], []))
-print(search_2_plex_rec_second(G, all_pairs_shortest_paths, nodes, [], []))
-print(search_2_plex_rec_third(G, all_pairs_shortest_paths, nodes, [], []))
-print(search_2_plex_rec_fourth(G, all_pairs_shortest_paths, nodes, [], []))
-"""
+plt.xticks(X_axis, names)
+plt.xlabel("Level of Improvement")
+plt.ylabel("Time")
+plt.title("Laufzeit der Algorithmen")
+plt.legend()
+plt.show()"""
+
+G = Graph()
+G.add_edge(1, 2)
+G.add_edge(1, 3)
+G.add_edge(2, 4)
+G.add_edge(3, 4)
+G.add_edge(2, 3)
+G.add_edge(4, 5)
+G.add_edge(0, 1)
+
+print(search_2_plex_main(G.copy_graph(), version=0))
+print(search_2_plex_main(G.copy_graph(), version=1))
+print(search_2_plex_main(G.copy_graph(), version=2))
+print(search_2_plex_main(G, version=3))
