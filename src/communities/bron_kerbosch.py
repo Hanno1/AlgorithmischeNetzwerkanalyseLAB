@@ -59,7 +59,7 @@ def bron_kerbosch_pivot(G, K, C, F, pivot_strategy):
         F.add(node)
 
 def bron_kerbosch_pivot_degen(G: Graph, pivot_strategy):
-    _, order = degeneracy(G)
+    _, order = degeneracy_bucket(G)
     for i in range(0,G.n):
         neighbors = G.get_neighbors(order[i])
         C = set(order[i+1:]) & neighbors
