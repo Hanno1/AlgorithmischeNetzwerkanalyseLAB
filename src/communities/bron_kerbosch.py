@@ -1,5 +1,5 @@
 from src.Graph import Graph
-from src.graphParameters import degeneracy, degeneracy_bucket, density
+from src.graphParameters import degeneracy_bucket, density
 from time import time
 
 def bron_kerbosch(G, timeout= 60):
@@ -59,7 +59,7 @@ def bron_kerbosch_pivot(G, K, C, F, pivot_strategy):
         F.add(node)
 
 def bron_kerbosch_pivot_degen(G: Graph, pivot_strategy):
-    _, order = degeneracy_bucket(G)
+    _, order = degeneracy(G)
     for i in range(0,G.n):
         neighbors = G.get_neighbors(order[i])
         C = set(order[i+1:]) & neighbors
