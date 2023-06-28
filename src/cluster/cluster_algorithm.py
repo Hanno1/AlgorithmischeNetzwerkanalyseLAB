@@ -44,6 +44,35 @@ def compute_disagreement(G: Graph, C: list, index: list = None):
     return mod
 
 
+def find_minimum_cut(G: Graph, cluster: set):
+    cluster_graph = G.copy_graph()
+    all_nodes = G.get_nodes()
+    for c in all_nodes - cluster:
+        cluster_graph.remove_node(c)
+
+    actual_nodes = dict()
+    for node in all_nodes:
+        actual_nodes[node] = {node}
+
+    edges = cluster_graph.edges
+    edge_weightes = dict()
+    for v in edges:
+        v_weightes = dict()
+        for u in edges[v]:
+            v_weightes[u] = 1
+        edge_weightes[v] = v_weightes
+
+    # start at some node
+    start_node = list(G.get_nodes())[0]
+    current_nodes = {start_node}
+    n = G.n
+    while len(current_nodes) < n-1:
+        # find minimum edge in clustergraph from current_nodes
+        possible_nodes = set()
+        for node in current_nodes:
+            # get neighbors
+            pass
+
 def merge_cluster_value(G: Graph, C: list, m1: int, m2: int, evaluation_values, version="mod"):
     if len(C) < 1:
         return
@@ -165,4 +194,5 @@ def second_heuristic(G: Graph, version="mod"):
 
 G = Graph("../../networks/out.ucidata-zachary_")
 # print(first_heuristic(G, version="dis"))
-print(second_heuristic(G, version="dis"))
+# print(second_heuristic(G, version="dis"))
+find_minimum_cut(G, G.get_nodes())
