@@ -1,5 +1,7 @@
 import copy
 from src.Graph import Graph
+from src.printGraph import draw_graph
+import math
 
 
 def edge_count(G: Graph, cluster: list):
@@ -55,59 +57,81 @@ def find_minimum_cut(G: Graph, cluster: set):
         changed_nodes[node] = {node}
 
     edges = cluster_graph.edges
+    mapping = cluster_graph.internal_ids_node_ids
     edge_weightes = dict()
     for v in edges:
         v_weightes = dict()
         for u in edges[v]:
-            v_weightes[u] = 1
-        edge_weightes[v] = v_weightes
+            v_weightes[mapping[u]] = 1
+        edge_weightes[mapping[v]] = v_weightes
 
-    all_cuts = set()
+    all_cuts = []
 
     while len(all_nodes) > 1:
         start_node = list(all_nodes)[0]
         current_nodes = {start_node}
         rest_nodes = all_nodes - current_nodes
-        previous_node = None
-        previous_weight = 0
+        previous_node = start_node
         while len(rest_nodes) > 1:
             neighbors = dict()
             for rn in rest_nodes:
                 neighbors[rn] = 0
             for node in current_nodes:
-                n_neighbors = [key for key in edge_weightes[node]]
-                for n in n_neighbors:
-                    neighbors[n] += edge_weightes[node][n]
-            max_value = 0
+                c = edge_weightes[node]
+                n_neighbors = {key for key in c}
+                for n in n_neighbors - current_nodes:
+                    neighbors[str(n)] += c[str(n)]
+            max_value = -1
             max_node = None
             for key in neighbors:
                 if neighbors[key] > max_value:
                     max_value = neighbors[key]
                     max_node = key
             # add max node to current nodes
-            current_nodes |= max_node
+            current_nodes |= {max_node}
             previous_node = max_node
-            previous_weight = max_value
-            rest_nodes -= max_node
+            rest_nodes -= {max_node}
         # remove last node from all_nodes and update edge weights
-        last_node = rest_nodes[0]
+        last_node = list(rest_nodes)[0]
 
         # add last cut
-        all_cuts.add([last_node, previous_weight])
+        last_weight = 0
+        edge_entry = copy.deepcopy(edge_weightes[last_node])
+        for key in edge_entry:
+            last_weight += edge_entry[key]
+        all_cuts.append([changed_nodes[last_node], last_weight])
 
         # union of last_node and previous_node
         all_nodes.remove(last_node)
+        changed_nodes[previous_node] |= changed_nodes[last_node]
         del changed_nodes[last_node]
-        changed_nodes[previous_node] |= last_node
         # update edge weights
-        edge_entry = edge_weightes[last_node]
+        try:
+            del edge_weightes[previous_node][last_node]
+        except:
+            pass
+        del edge_weightes[last_node]
         for v in edge_entry:
+            if v == previous_node:
+                continue
             if v in edge_weightes[previous_node]:
                 edge_weightes[previous_node][v] += edge_entry[v]
             else:
                 edge_weightes[previous_node][v] = edge_entry[v]
-        break
-    return all_cuts
+            # remove all connections to the last node
+            del edge_weightes[v][last_node]
+            # update weights
+            try:
+                edge_weightes[v][previous_node] += edge_entry[v]
+            except:
+                edge_weightes[v][previous_node] = edge_entry[v]#
+    min_cut = None
+    min_cut_value = math.inf
+    for cut in all_cuts:
+        if cut[1] < min_cut_value:
+            min_cut_value = cut[1]
+            min_cut = cut
+    return min_cut
 
 
 def merge_cluster_value(G: Graph, C: list, m1: int, m2: int, evaluation_values, version="mod"):
@@ -138,7 +162,8 @@ def cut_cluster_value(G: Graph, C: list, m1: int, evaluation_values, version="mo
 
     # TODO - more rules. this is min_degree
     cut_cluster = C[m1]
-    min_degree_nodes = set()
+    min_cut = find_minimum_cut(G, cut_cluster)[0]
+    """min_degree_nodes = set()
     min_degree = G.n
     for node in cut_cluster:
         deg = G.get_node_degree(node)
@@ -146,10 +171,11 @@ def cut_cluster_value(G: Graph, C: list, m1: int, evaluation_values, version="mo
             min_degree_nodes = {node}
             min_degree = deg
         elif deg == min_degree:
-            min_degree_nodes.add(node)
+            min_degree_nodes.add(node)"""
 
-    c1 = cut_cluster - min_degree_nodes
-    c2 = min_degree_nodes
+    c1 = cut_cluster - min_cut
+    c2 = min_cut
+
     new_clustering[m1] = c1
     new_clustering.append(c2)
     m2 = len(new_clustering) - 1
@@ -230,6 +256,13 @@ def second_heuristic(G: Graph, version="mod"):
 
 
 G = Graph("../../networks/out.ucidata-zachary_")
-# print(first_heuristic(G, version="dis"))
-# print(second_heuristic(G, version="dis"))
-find_minimum_cut(G, G.get_nodes())
+"""G = Graph()
+G.add_edge(1, 2)
+G.add_edge(2, 3)
+G.add_edge(3, 4)
+G.add_edge(4, 1)
+G.add_edge(4, 5)
+G.add_edge(5, 6)"""
+print(first_heuristic(G, version="mod"))
+print(second_heuristic(G, version="mod"))
+# draw_graph(G, label_on=True)
