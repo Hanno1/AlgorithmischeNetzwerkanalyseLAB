@@ -50,9 +50,9 @@ def find_minimum_cut(G: Graph, cluster: set):
     for c in all_nodes - cluster:
         cluster_graph.remove_node(c)
 
-    actual_nodes = dict()
+    changed_nodes = dict()
     for node in all_nodes:
-        actual_nodes[node] = {node}
+        changed_nodes[node] = {node}
 
     edges = cluster_graph.edges
     edge_weightes = dict()
@@ -62,16 +62,53 @@ def find_minimum_cut(G: Graph, cluster: set):
             v_weightes[u] = 1
         edge_weightes[v] = v_weightes
 
-    # start at some node
-    start_node = list(G.get_nodes())[0]
-    current_nodes = {start_node}
-    n = G.n
-    while len(current_nodes) < n-1:
-        # find minimum edge in clustergraph from current_nodes
-        possible_nodes = set()
-        for node in current_nodes:
-            # get neighbors
-            pass
+    all_cuts = set()
+
+    while len(all_nodes) > 1:
+        start_node = list(all_nodes)[0]
+        current_nodes = {start_node}
+        rest_nodes = all_nodes - current_nodes
+        previous_node = None
+        previous_weight = 0
+        while len(rest_nodes) > 1:
+            neighbors = dict()
+            for rn in rest_nodes:
+                neighbors[rn] = 0
+            for node in current_nodes:
+                n_neighbors = [key for key in edge_weightes[node]]
+                for n in n_neighbors:
+                    neighbors[n] += edge_weightes[node][n]
+            max_value = 0
+            max_node = None
+            for key in neighbors:
+                if neighbors[key] > max_value:
+                    max_value = neighbors[key]
+                    max_node = key
+            # add max node to current nodes
+            current_nodes |= max_node
+            previous_node = max_node
+            previous_weight = max_value
+            rest_nodes -= max_node
+        # remove last node from all_nodes and update edge weights
+        last_node = rest_nodes[0]
+
+        # add last cut
+        all_cuts.add([last_node, previous_weight])
+
+        # union of last_node and previous_node
+        all_nodes.remove(last_node)
+        del changed_nodes[last_node]
+        changed_nodes[previous_node] |= last_node
+        # update edge weights
+        edge_entry = edge_weightes[last_node]
+        for v in edge_entry:
+            if v in edge_weightes[previous_node]:
+                edge_weightes[previous_node][v] += edge_entry[v]
+            else:
+                edge_weightes[previous_node][v] = edge_entry[v]
+        break
+    return all_cuts
+
 
 def merge_cluster_value(G: Graph, C: list, m1: int, m2: int, evaluation_values, version="mod"):
     if len(C) < 1:
