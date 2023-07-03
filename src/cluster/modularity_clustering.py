@@ -1,4 +1,5 @@
 from src.Graph import Graph
+import heapq
 
 def modularity_clustering(G: Graph, verbose = False):
     def compute_update_deltas(deltas, a, merge_i, merge_j):
@@ -74,7 +75,6 @@ def modularity_clustering(G: Graph, verbose = False):
         _, (merge_i, merge_j)= heapq.heappop(deltas)
         if verbose:
             print("merge", (merge_i,merge_j))
-        print("merge", (merge_i, merge_j))
         clusters[merge_i] = clusters[merge_i] | clusters[merge_j]
         a[merge_i]+=a[merge_j]
 
@@ -96,13 +96,19 @@ def modularity_clustering(G: Graph, verbose = False):
                 break
         if done:
             break
+    
+    # translate internal ids
+    new_clusters = [] 
+    for c in clusters:
+        new_c = set()
+        for i in clusters[c]:
+            new_c.add(G.internal_ids_node_ids[i])
+        new_clusters.append(new_c)
 
-    return clusters
+    return new_clusters
 
 if __name__ == "__main__":
-    import heapq
     G = Graph()
     G.read_graph_as_edge_list("../../networks/special_case_for_networkx.mtx")
-#    G.read_graph_as_edge_list("../../networks/bio-dmela.mtx")
     clusters = modularity_clustering(G)
     print(clusters)
