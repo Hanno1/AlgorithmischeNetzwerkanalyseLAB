@@ -1,51 +1,19 @@
 from src.Graph import Graph
 
-if __name__ == "__main__":
-    import heapq
-    G = Graph()
-    G.add_edge(1,2)
-    G.add_edge(3,2)
-    G.add_edge(4,2)
-    G.add_edge(4,1)
-    G.add_edge(5,6)
-    G.add_node(7)
-    nodes = sorted(list(G.get_internal_nodes()))
-    print(nodes)
-    # save clusters with their "ID"
-    clusters = {i:{n} for i,n in enumerate(nodes)}
-    degrees = {n: len(G.edges[n]) for n in G.edges}
-    a = {n: degrees[n]/(2*G.m) for n in degrees}
-    deltas = []
-    # init deltas
-    for i in range(G.n):
-        n_i = nodes[i]
-        for j in range(i+1, G.n):
-            n_j = nodes[j]
-            if n_j in G.edges[n_i]: 
-                change = 1/G.m - (2*degrees[n_i]*degrees[n_j])/(4*G.m**2)
-            else:
-                change = - (2*degrees[n_i]*degrees[n_j])/(4*G.m**2)
-            values = (-change,(n_i,n_j)) # init delta = -(init delta) because we have a min heap
-            deltas.append(values)
-    heapq.heapify(deltas)
-    while len(clusters)>1:
-        _, (merge_i, merge_j)= heapq.heappop(deltas)
-        clusters[merge_i] = clusters[merge_i] | clusters[merge_j]
-        a[merge_i]+=a[merge_j]
-        union_neighbors = G.edges[merge_i] | G.edges[merge_j]
-        i_neigbors = G.edges[merge_i] - G.edges[merge_j]
-        j_neigbors = G.edges[merge_j] - G.edges[merge_i]
-
+def modularity_clustering(G: Graph, verbose = False):
+    def compute_update_deltas(deltas, a, merge_i, merge_j):
+        # computes delta indices that need to be deleted from heap
+        # computes new delta values that need to be added to heap
+        # -> we delete and insert instead of updating because of the heap datastructure
         sub_deltas = {} # get all deltas that are relevant for current merge choices (tuples containing i or j)
         for idx,(delta,(u,v)) in enumerate(deltas):
             if {u,v} == {merge_i, merge_j}:
                 continue
             if u in [merge_i, merge_j] or v in [merge_i,merge_j]:
-                sub_deltas[(u,v)]=(delta,idx)   # also save index of where we found it in »deltas« so we can change it later
-        # example sub_deltas = {(0, 1): (-0.08, 1), (1, 3): (-0.08, 3), (1, 6): (-0.0, 4), (2, 4): (0.02, 5), 
-        #                       (2, 6): (-0.0, 6), (0, 2): (0.04, 7), (2, 3): (0.04, 10), (1, 4): (0.06, 11)}
-        # for merge_i = 1, merge_j=2 
+                sub_deltas[(u,v)]=(delta,idx)   # also save index of where we found it in »deltas« so we can delete it later if necessary
 
+        i_neighbors = set([n for N in G.edges for n in G.edges[N] if N in clusters[merge_i]])
+        j_neighbors = set([n for N in G.edges for n in G.edges[N] if N in clusters[merge_j]])
         q_idx_to_delete = []
         q_updates = []
 
@@ -72,20 +40,50 @@ if __name__ == "__main__":
             # update deltas depending on cluster l nodes' connections with the merged clusters
             # update = -(update) from lectures because we have a min heap
             updated_delta = None
-            if cl_nodes & j_neigbors and cl_nodes & i_neigbors:
+            if cl_nodes & j_neighbors and cl_nodes & i_neighbors:
                 updated_delta = (delta - delta_j, (u,v))
-            elif cl_nodes & i_neigbors:
+            elif cl_nodes & i_neighbors:
                 updated_delta = (delta + 2*a[merge_i]*a[l], (u,v))
-            elif cl_nodes & j_neigbors:
+            elif cl_nodes & j_neighbors:
                 updated_delta = (delta + 2*a[merge_j]*a[l], (u,v))
             if updated_delta is not None:
                 q_idx_to_delete.append(q_idx)
                 q_updates.append(updated_delta)
+        return q_idx_to_delete, q_updates
 
-        # delete all variables associated with j 
+    nodes = sorted(list(G.get_internal_nodes()))
+    clusters = {i:{n} for i,n in enumerate(nodes)} # save clusters with their "ID"
+    degrees = {n: len(G.edges[n]) for n in G.edges}
+    a = {i: degrees[n]/(2*G.m) for i,n in enumerate(nodes)}
+    deltas = []
+
+    # init deltas
+    for i in range(G.n):
+        n_i = nodes[i]
+        for j in range(i+1, G.n):
+            n_j = nodes[j]
+            if n_j in G.edges[n_i]: 
+                change = 1/G.m - (2*degrees[n_i]*degrees[n_j])/(4*G.m**2)
+            else:
+                change = - (2*degrees[n_i]*degrees[n_j])/(4*G.m**2)
+            values = (-change,(i,j)) # init delta = -(init delta) because we have a min heap
+            deltas.append(values)
+    heapq.heapify(deltas)
+
+    while len(clusters)>1:
+        _, (merge_i, merge_j)= heapq.heappop(deltas)
+        if verbose:
+            print("merge", (merge_i,merge_j))
+        print("merge", (merge_i, merge_j))
+        clusters[merge_i] = clusters[merge_i] | clusters[merge_j]
+        a[merge_i]+=a[merge_j]
+
+        q_idx_to_delete, q_updates = compute_update_deltas(deltas, a, merge_i, merge_j)
+
+        # delete all variables associated with j and update deltas by deletion and re-insertion
         del clusters[merge_j]
         del a[merge_j]
-        q_idx_to_delete.reverse()
+        q_idx_to_delete.reverse() # index array is ordered (ascending). reverse because otherwise indices would not match after deletion
         for idx in q_idx_to_delete:
             del deltas[idx]
         for update in q_updates:
@@ -98,4 +96,13 @@ if __name__ == "__main__":
                 break
         if done:
             break
-    print(clusters) 
+
+    return clusters
+
+if __name__ == "__main__":
+    import heapq
+    G = Graph()
+    G.read_graph_as_edge_list("../../networks/special_case_for_networkx.mtx")
+#    G.read_graph_as_edge_list("../../networks/bio-dmela.mtx")
+    clusters = modularity_clustering(G)
+    print(clusters)
