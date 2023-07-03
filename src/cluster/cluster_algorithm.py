@@ -1,6 +1,5 @@
 import copy
 from src.Graph import Graph
-from src.printGraph import draw_graph
 import math
 
 
@@ -46,11 +45,13 @@ def compute_disagreement(G: Graph, C: list, index: list = None):
     return mod
 
 
-def find_minimum_cut(G: Graph, cluster: set):
+def min_cut_alg(G, cluster):
     cluster_graph = G.copy_graph()
     all_nodes = G.get_nodes()
     for c in all_nodes - cluster:
         cluster_graph.remove_node(c)
+
+    all_nodes = cluster_graph.get_nodes()
 
     changed_nodes = dict()
     for node in all_nodes:
@@ -124,7 +125,14 @@ def find_minimum_cut(G: Graph, cluster: set):
             try:
                 edge_weightes[v][previous_node] += edge_entry[v]
             except:
-                edge_weightes[v][previous_node] = edge_entry[v]#
+                edge_weightes[v][previous_node] = edge_entry[v]
+    return all_cuts
+
+
+def find_minimum_cut(G: Graph, cluster=None):
+    if cluster is None:
+        cluster = copy.deepcopy(G.get_nodes())
+    all_cuts = min_cut_alg(G, cluster)
     min_cut = None
     min_cut_value = math.inf
     for cut in all_cuts:
@@ -253,16 +261,3 @@ def second_heuristic(G: Graph, version="mod"):
             clustering = max_clustering
             better = True
     return clustering, current_value
-
-
-G = Graph("../../networks/out.ucidata-zachary_")
-"""G = Graph()
-G.add_edge(1, 2)
-G.add_edge(2, 3)
-G.add_edge(3, 4)
-G.add_edge(4, 1)
-G.add_edge(4, 5)
-G.add_edge(5, 6)"""
-print(first_heuristic(G, version="mod"))
-print(second_heuristic(G, version="mod"))
-# draw_graph(G, label_on=True)
