@@ -42,7 +42,7 @@ def modularity_clustering(G: Graph, verbose = False):
             # update = -(update) from lectures because we have a min heap
             updated_delta = None
             if cl_nodes & j_neighbors and cl_nodes & i_neighbors:
-                updated_delta = (delta - delta_j, (u,v))
+                updated_delta = (delta + delta_j, (u,v))
             elif cl_nodes & i_neighbors:
                 updated_delta = (delta + 2*a[merge_i]*a[l], (u,v))
             elif cl_nodes & j_neighbors:
