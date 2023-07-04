@@ -3,6 +3,7 @@ import copy
 from src.Graph import Graph
 import math
 
+
 def edge_count(G: Graph, cluster: list):
     edge_count = 0
     for el in cluster:
@@ -35,6 +36,7 @@ def compute_disagreement(G: Graph, C: list, index: list = None):
     def compute_dis_single_cluster(c):
         cluster_length = len(c)
         return ((cluster_length * (cluster_length - 1)) / 2) - 2 * edge_count(G, c)
+
     if index:
         if len(index) == 1:
             return compute_dis_single_cluster(C[index[0]])
@@ -216,7 +218,8 @@ def first_heuristic(G: Graph, version="mod"):
         for i1 in range(len(clustering) - 1):
             for i2 in range(i1 + 1, len(clustering)):
                 # try merging
-                new_sum, new_values, new_clustering = merge_cluster_value(G, clustering, i1, i2, current_values, version)
+                new_sum, new_values, new_clustering = merge_cluster_value(G, clustering, i1, i2, current_values,
+                                                                          version)
                 if version == "mod" and new_sum > max_value:
                     max_values = new_values
                     max_value = new_sum
@@ -239,8 +242,6 @@ def second_heuristic(G: Graph, version="mod"):
     current_values = compute_modularity(G, clustering) if version == "mod" else compute_disagreement(G, clustering)
     current_value = sum(current_values) if version == "mod" else G.m - sum(current_values)
     while better:
-        if len(clustering[0]) == 1:
-            break
         better = False
         max_value = current_value
         max_values = None
@@ -262,7 +263,8 @@ def second_heuristic(G: Graph, version="mod"):
             better = True
     return clustering, current_value
 
-def compute_rand_index(clustering_1: list, clustering_2: list):
+
+def compute_rand_index(G, clustering_1: list, clustering_2: list):
     a = 0
     b = 0
     for elm_1 in G.get_nodes():
@@ -271,11 +273,11 @@ def compute_rand_index(clustering_1: list, clustering_2: list):
             in_cluster_2 = False
 
             for cluster in clustering_1:
-                if {elm_1,elm_2}.issubset(cluster):
+                if {elm_1, elm_2}.issubset(cluster):
                     in_cluster_1 = True
 
             for cluster in clustering_2:
-                if {elm_1,elm_2}.issubset(cluster):
+                if {elm_1, elm_2}.issubset(cluster):
                     in_cluster_2 = True
 
             if in_cluster_1 and in_cluster_2:
@@ -283,6 +285,4 @@ def compute_rand_index(clustering_1: list, clustering_2: list):
             if not in_cluster_1 and not in_cluster_2:
                 b += 1
 
-    return (a+b)/math.comb(len(G.get_nodes()),2)
-
-
+    return (a + b) / math.comb(len(G.get_nodes()), 2)

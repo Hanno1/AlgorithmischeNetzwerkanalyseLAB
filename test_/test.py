@@ -44,8 +44,3 @@ G.add_edge(3, 4)
 G.add_edge(2, 3)
 G.add_edge(4, 5)
 G.add_edge(0, 1)
-
-print(search_2_plex_main(G.copy_graph(), version=0))
-print(search_2_plex_main(G.copy_graph(), version=1))
-print(search_2_plex_main(G.copy_graph(), version=2))
-print(search_2_plex_main(G, version=3))
