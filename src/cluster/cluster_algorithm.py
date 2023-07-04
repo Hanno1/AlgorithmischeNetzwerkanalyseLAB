@@ -1,4 +1,5 @@
 import copy
+from src.printGraph import draw_graph
 from src.Graph import Graph
 import math
 
@@ -190,12 +191,12 @@ def cut_cluster_value(G: Graph, C: list, m1: int, evaluation_values, version="mo
     if version == "mod":
         v1, v2 = compute_modularity(G, new_clustering, [m1, m2])
         new_evaluation_values[m1] = v1
-        new_evaluation_values[m2] = v2
+        new_evaluation_values.append(v2)
         return sum(new_evaluation_values), new_evaluation_values, new_clustering
     else:
         v1, v2 = compute_disagreement(G, new_clustering, [m1, m2])
         new_evaluation_values[m1] = v1
-        new_evaluation_values[m2] = v2
+        new_evaluation_values.append(v2)
         return G.m - sum(new_evaluation_values), new_evaluation_values, new_clustering
 
 
@@ -207,6 +208,7 @@ def first_heuristic(G: Graph, version="mod"):
     current_values = compute_modularity(G, clustering) if version == "mod" else compute_disagreement(G, clustering)
     current_value = sum(current_values) if version == "mod" else G.m - sum(current_values)
     while better:
+        print("going")
         if len(clustering) == 1:
             break
         better = False
@@ -217,6 +219,7 @@ def first_heuristic(G: Graph, version="mod"):
             for i2 in range(i1 + 1, len(clustering)):
                 # try merging
                 new_sum, new_values, new_clustering = merge_cluster_value(G, clustering, i1, i2, current_values, version)
+                print(new_sum,current_value)
                 if version == "mod" and new_sum > max_value:
                     max_values = new_values
                     max_value = new_sum
@@ -239,7 +242,7 @@ def second_heuristic(G: Graph, version="mod"):
     current_values = compute_modularity(G, clustering) if version == "mod" else compute_disagreement(G, clustering)
     current_value = sum(current_values) if version == "mod" else G.m - sum(current_values)
     while better:
-        if len(clustering) == 1:
+        if len(clustering[0]) == 1:
             break
         better = False
         max_value = current_value
@@ -261,3 +264,40 @@ def second_heuristic(G: Graph, version="mod"):
             clustering = max_clustering
             better = True
     return clustering, current_value
+
+def compute_rand_index(clustering_1: list, clustering_2: list):
+    a = 0
+    b = 0
+    for elm_1 in G.get_nodes():
+        for elm_2 in G.get_nodes():
+            in_cluster_1 = False
+            in_cluster_2 = False
+
+            for cluster in clustering_1:
+                if {elm_1,elm_2}.issubset(cluster):
+                    in_cluster_1 = True
+
+            for cluster in clustering_2:
+                if {elm_1,elm_2}.issubset(cluster):
+                    in_cluster_2 = True
+
+            if in_cluster_1 and in_cluster_2:
+                a += 1
+            if not in_cluster_1 and not in_cluster_2:
+                b += 1
+
+    return (a+b)/math.comb(len(G.get_nodes()),2)y
+
+if __name__ == "__main__":
+    G = Graph()
+    G.add_edge(1,2)
+    G.add_edge(2,3)
+    G.add_edge(3,1)
+    G.add_edge(1,4)
+    G.add_edge(4,5)
+    G.add_edge(5,6)
+    G.add_edge(6,7)
+    G.add_edge(7,5)
+    print(find_minimum_cut(G))
+    print(first_heuristic(G,"dis"))
+    print(second_heuristic(G,"dis"))
