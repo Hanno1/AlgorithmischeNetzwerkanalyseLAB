@@ -1,7 +1,7 @@
 import copy
+
 from src.Graph import Graph
 import math
-
 
 def edge_count(G: Graph, cluster: list):
     edge_count = 0
@@ -190,12 +190,12 @@ def cut_cluster_value(G: Graph, C: list, m1: int, evaluation_values, version="mo
     if version == "mod":
         v1, v2 = compute_modularity(G, new_clustering, [m1, m2])
         new_evaluation_values[m1] = v1
-        new_evaluation_values[m2] = v2
+        new_evaluation_values.append(v2)
         return sum(new_evaluation_values), new_evaluation_values, new_clustering
     else:
         v1, v2 = compute_disagreement(G, new_clustering, [m1, m2])
         new_evaluation_values[m1] = v1
-        new_evaluation_values[m2] = v2
+        new_evaluation_values.append(v2)
         return G.m - sum(new_evaluation_values), new_evaluation_values, new_clustering
 
 
@@ -239,7 +239,7 @@ def second_heuristic(G: Graph, version="mod"):
     current_values = compute_modularity(G, clustering) if version == "mod" else compute_disagreement(G, clustering)
     current_value = sum(current_values) if version == "mod" else G.m - sum(current_values)
     while better:
-        if len(clustering) == 1:
+        if len(clustering[0]) == 1:
             break
         better = False
         max_value = current_value
@@ -261,3 +261,28 @@ def second_heuristic(G: Graph, version="mod"):
             clustering = max_clustering
             better = True
     return clustering, current_value
+
+def compute_rand_index(clustering_1: list, clustering_2: list):
+    a = 0
+    b = 0
+    for elm_1 in G.get_nodes():
+        for elm_2 in G.get_nodes():
+            in_cluster_1 = False
+            in_cluster_2 = False
+
+            for cluster in clustering_1:
+                if {elm_1,elm_2}.issubset(cluster):
+                    in_cluster_1 = True
+
+            for cluster in clustering_2:
+                if {elm_1,elm_2}.issubset(cluster):
+                    in_cluster_2 = True
+
+            if in_cluster_1 and in_cluster_2:
+                a += 1
+            if not in_cluster_1 and not in_cluster_2:
+                b += 1
+
+    return (a+b)/math.comb(len(G.get_nodes()),2)
+
+
