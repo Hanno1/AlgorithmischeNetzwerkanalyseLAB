@@ -1,8 +1,7 @@
 import copy
-from src.printGraph import draw_graph
+
 from src.Graph import Graph
 import math
-
 
 def edge_count(G: Graph, cluster: list):
     edge_count = 0
@@ -208,7 +207,6 @@ def first_heuristic(G: Graph, version="mod"):
     current_values = compute_modularity(G, clustering) if version == "mod" else compute_disagreement(G, clustering)
     current_value = sum(current_values) if version == "mod" else G.m - sum(current_values)
     while better:
-        print("going")
         if len(clustering) == 1:
             break
         better = False
@@ -219,7 +217,6 @@ def first_heuristic(G: Graph, version="mod"):
             for i2 in range(i1 + 1, len(clustering)):
                 # try merging
                 new_sum, new_values, new_clustering = merge_cluster_value(G, clustering, i1, i2, current_values, version)
-                print(new_sum,current_value)
                 if version == "mod" and new_sum > max_value:
                     max_values = new_values
                     max_value = new_sum
@@ -286,18 +283,6 @@ def compute_rand_index(clustering_1: list, clustering_2: list):
             if not in_cluster_1 and not in_cluster_2:
                 b += 1
 
-    return (a+b)/math.comb(len(G.get_nodes()),2)y
+    return (a+b)/math.comb(len(G.get_nodes()),2)
 
-if __name__ == "__main__":
-    G = Graph()
-    G.add_edge(1,2)
-    G.add_edge(2,3)
-    G.add_edge(3,1)
-    G.add_edge(1,4)
-    G.add_edge(4,5)
-    G.add_edge(5,6)
-    G.add_edge(6,7)
-    G.add_edge(7,5)
-    print(find_minimum_cut(G))
-    print(first_heuristic(G,"dis"))
-    print(second_heuristic(G,"dis"))
+
