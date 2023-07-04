@@ -2,7 +2,6 @@ import copy
 
 from src.Graph import Graph
 import math
-from modularity_clustering import modularity_clustering as mc
 
 
 def edge_count(G: Graph, cluster: list):
@@ -296,11 +295,3 @@ def compute_rand_index(G, clustering_1: list, clustering_2: list):
                 b += 1
 
     return (a + b) / math.comb(len(G.get_nodes()), 2)
-
-
-G = Graph("../../networks/out.ucidata-zachary_")
-#print(mc(G))
-#print(first_heuristic(G))
-#print(first_heuristic(G, version="dis"))
-print(second_heuristic(G))
-print(second_heuristic(G, version="dis"))
