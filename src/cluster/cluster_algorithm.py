@@ -16,12 +16,12 @@ def compute_modularity(G: Graph, C: list, index: list = None):
     def compute_mod_single_cluster(c):
         s = 0
         for n in c:
-            s -= G.get_node_degree(n) ** 2
-        s /= 4 * m ** 2
-        s += (edge_count(G, c) / m)
+            s += G.get_node_degree(n)
+        s = -(s**2)
+        s /= 4 * (G.m ** 2)
+        s += (edge_count(G, c) / G.m)
         return s
 
-    m = G.m
     if index:
         if len(index) == 1:
             return compute_mod_single_cluster(C[index[0]])
@@ -172,33 +172,42 @@ def cut_cluster_value(G: Graph, C: list, m1: int, evaluation_values, version="mo
 
     # TODO - more rules. this is min_degree
     cut_cluster = C[m1]
-    min_cut = find_minimum_cut(G, cut_cluster)[0]
-    """min_degree_nodes = set()
-    min_degree = G.n
-    for node in cut_cluster:
-        deg = G.get_node_degree(node)
-        if deg < min_degree:
-            min_degree_nodes = {node}
-            min_degree = deg
-        elif deg == min_degree:
-            min_degree_nodes.add(node)"""
+    # min_cut = find_minimum_cut(G, cut_cluster)[0]
+    # go other all cuts:
+    max_value = sum(new_evaluation_values)
+    max_evaluation_values = copy.deepcopy(new_evaluation_values)
+    max_clustering = copy.deepcopy(new_clustering)
 
-    c1 = cut_cluster - min_cut
-    c2 = min_cut
+    all_cuts = min_cut_alg(G, cut_cluster)
+    for c in all_cuts:
+        min_cut = c[0]
 
-    new_clustering[m1] = c1
-    new_clustering.append(c2)
-    m2 = len(new_clustering) - 1
-    if version == "mod":
-        v1, v2 = compute_modularity(G, new_clustering, [m1, m2])
-        new_evaluation_values[m1] = v1
-        new_evaluation_values.append(v2)
-        return sum(new_evaluation_values), new_evaluation_values, new_clustering
-    else:
-        v1, v2 = compute_disagreement(G, new_clustering, [m1, m2])
-        new_evaluation_values[m1] = v1
-        new_evaluation_values.append(v2)
-        return G.m - sum(new_evaluation_values), new_evaluation_values, new_clustering
+        c1 = cut_cluster - min_cut
+        c2 = min_cut
+
+        tmp_clustering = copy.deepcopy(new_clustering)
+        tmp_clustering[m1] = c1
+        tmp_clustering.append(c2)
+        m2 = len(tmp_clustering) - 1
+        if version == "mod":
+            v1, v2 = compute_modularity(G, tmp_clustering, [m1, m2])
+            new_evaluation_values[m1] = v1
+            new_evaluation_values.append(v2)
+            modularity = sum(new_evaluation_values)
+            if modularity > max_value:
+                max_value = modularity
+                max_evaluation_values = copy.deepcopy(new_evaluation_values)
+                max_clustering = copy.deepcopy(tmp_clustering)
+        else:
+            v1, v2 = compute_disagreement(G, tmp_clustering, [m1, m2])
+            new_evaluation_values[m1] = v1
+            new_evaluation_values.append(v2)
+            disagreement = G.m - sum(new_evaluation_values)
+            if disagreement < max_value:
+                max_value = disagreement
+                max_evaluation_values = copy.deepcopy(new_evaluation_values)
+                max_clustering = copy.deepcopy(tmp_clustering)
+    return max_value, max_evaluation_values, max_clustering
 
 
 def first_heuristic(G: Graph, version="mod"):
@@ -224,7 +233,7 @@ def first_heuristic(G: Graph, version="mod"):
                     max_values = new_values
                     max_value = new_sum
                     max_clustering = new_clustering
-                elif version == "dis" and new_sum <= max_value:
+                elif version == "dis" and new_sum < max_value:
                     max_values = new_values
                     max_value = new_sum
                     max_clustering = new_clustering
@@ -252,7 +261,7 @@ def second_heuristic(G: Graph, version="mod"):
                 max_values = new_values
                 max_value = new_sum
                 max_clustering = new_clustering
-            elif version == "dis" and new_sum <= max_value:
+            elif version == "dis" and new_sum < max_value:
                 max_values = new_values
                 max_value = new_sum
                 max_clustering = new_clustering
