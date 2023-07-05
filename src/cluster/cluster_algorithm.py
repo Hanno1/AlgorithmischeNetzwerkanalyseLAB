@@ -7,6 +7,7 @@ from time import time
 import numpy as np
 import matplotlib.pyplot as plt
 
+
 def edge_count(G: Graph, cluster: list):
     edge_count = 0
     for el in cluster:
@@ -20,7 +21,7 @@ def compute_modularity(G: Graph, C: list, index: list = None):
         s = 0
         for n in c:
             s += G.get_node_degree(n)
-        s = -(s**2)
+        s = -(s ** 2)
         s /= 4 * (G.m ** 2)
         s += (edge_count(G, c) / G.m)
         return s
@@ -298,131 +299,18 @@ def compute_rand_index(G, clustering_1: list, clustering_2: list):
                 a += 1
             if not in_cluster_1 and not in_cluster_2:
                 b += 1
-    return (a/2 + b/2) / math.comb(G.n, 2)
+    return (a / 2 + b / 2) / math.comb(G.n, 2)
+
 
 def groessenverteilung(clustering):
     groessenverteilung_list = []
     for cluster in clustering:
         groessenverteilung_list.append(len(cluster))
     bins = np.arange(0, max(groessenverteilung_list) + 1.5) - 0.5
-    plt.hist(groessenverteilung_list,align='mid',rwidth=0.9,bins=bins)
-    plt.xticks(bins + 0.5,fontsize=18)
+    plt.hist(groessenverteilung_list, align='mid', rwidth=0.9, bins=bins)
+    plt.xticks(bins + 0.5, fontsize=18)
     plt.yticks(fontsize=18)
 
-    plt.xlabel("Clustergröße",fontsize=20)
-    plt.ylabel("Anzahl an Clustern",fontsize=20)
+    plt.xlabel("Clustergröße", fontsize=20)
+    plt.ylabel("Anzahl an Clustern", fontsize=20)
     plt.show()
-
-
-if __name__ == "__main__":
-
-    times_first_mod = []
-    cluster_first_mod = []
-    times_second_mod = []
-    cluster_second_mod = []
-    times_first_dis = []
-    cluster_first_dis = []
-    times_second_dis = []
-    cluster_second_dis = []
-    times_modularity_clustering = []
-    cluster_modularity_clustering = []
-    #["networks/out.adjnoun_adjacency_adjacency_", "networks/out.moreno_zebra_zebra_", "networks/out.ucidata-zachary_", "networks/special_case_for_networkx.mtx"]
-    for path in ["networks/out.adjnoun_adjacency_adjacency_", "networks/out.moreno_zebra_zebra_", "networks/out.ucidata-zachary_", "networks/special_case_for_networkx.mtx"]:
-        path = "E:/GitHub/AlgorithmischeNetzwerkanalyseLAB/" + path
-        try:
-            G = Graph(path)
-        except:
-            G = Graph(path, mode=Graph.READ_MOD_METIS)
-        print("nodes: ", G.n, "edges: ",G.m)
-        start_time = time()
-        cluster_first_mod.append(first_heuristic(G, version="mod")[0])
-        times_first_mod.append(time() - start_time)
-        print("first_mod")
-        start_time = time()
-        cluster_second_mod.append(second_heuristic(G, version="mod")[0])
-        times_second_mod.append(time() - start_time)
-        print("times_second_mod")
-        start_time = time()
-        cluster_first_dis.append(first_heuristic(G, version="dis")[0])
-        times_first_dis.append(time() - start_time)
-        print("times_first_dis")
-        start_time = time()
-        cluster_second_dis.append(second_heuristic(G, version="dis")[0])
-        times_second_dis.append(time() - start_time)
-        print("times_second_dis")
-        start_time = time()
-        cluster_modularity_clustering.append(modularity_clustering(G))
-        times_modularity_clustering.append(time() - start_time)
-        print("modularity_clustering")
-    """
-    for i in range(len(cluster_first_mod)):
-        table_data = []
-        colors = []
-        cluster_types = [cluster_first_mod[i],cluster_second_mod[i],cluster_first_dis[i],cluster_second_dis[i],cluster_modularity_clustering[i]]
-        cluster_name = ["First-mod","Second-mod","First-dis","Second-dis","Modularity-clustering"]
-        table_data.append([""]+cluster_name)
-        colors.append(["w","w","w","w","w","w"])
-        for j,cluster_type_1 in enumerate(cluster_types):
-            row = []
-            row.append(cluster_name[j])
-            for cluster_type_2 in cluster_types:
-                row.append(round(compute_rand_index(G,cluster_type_1,cluster_type_2),2))
-            if j%2 == 0:
-                colors.append(["gray","gray","gray","gray","gray","gray"])
-            else:
-                colors.append(["w","w","w","w","w","w"])
-            table_data.append(row)
-
-        fig, ax = plt.subplots()
-        fig.patch.set_visible(False)
-        ax.axis('off')
-        ax.axis('tight')
-
-        table = ax.table(cellText=table_data, loc='center', cellColours=colors)
-        table.auto_set_font_size(False)
-        table.set_fontsize(20)
-        table.scale(1, 1)
-        fig.tight_layout()
-        #plt.show()
-    """
-    for i in range(len(cluster_first_mod)):
-        table_data = [
-            ["","First-mod","Second-mod","First-dis","Second-dis","Modularity-clustering"],
-            ["Anzahl Cluster",len(cluster_first_mod[i]),len(cluster_second_mod[i]),len(cluster_first_dis[i]),len(cluster_second_dis[i]),len(cluster_modularity_clustering[i])],
-            ["Größenverteilung", groessenverteilung(cluster_first_mod[i]), groessenverteilung(cluster_second_mod[i]), groessenverteilung(cluster_first_dis[i]), groessenverteilung(cluster_second_dis[i]), groessenverteilung(cluster_modularity_clustering[i])]
-        ]
-        colors = [
-            ["w","w","w","w","w","w"],
-            ["gray","gray","gray","gray","gray","gray"],
-            ["w", "w", "w", "w", "w", "w"]
-        ]
-        fig, ax = plt.subplots()
-        fig.patch.set_visible(False)
-        ax.axis('off')
-        ax.axis('tight')
-
-        table = ax.table(cellText=table_data, loc='center', cellColours=colors)
-        table.auto_set_font_size(False)
-        table.set_fontsize(20)
-        table.scale(1, 1)
-        fig.tight_layout()
-        plt.show()
-
-
-    names = ["n = 112 m = 425", "n = 27 m = 111", "n = 34 m = 78", "n = 12 m = 15"]
-
-    fig = plt.figure(figsize=(7, 3))
-    X_axis = np.arange(len(names))
-
-    plt.bar(X_axis - 0.2, times_first_mod, 0.1, label='First-mod',color='blue')
-    plt.bar(X_axis - 0.1, times_second_mod, 0.1, label='Second-mod',color='navy')
-    plt.bar(X_axis + 0.0, times_first_dis, 0.1, label='First-dis',color='green')
-    plt.bar(X_axis + 0.1, times_second_dis, 0.1, label='Second-dis',color='darkgreen')
-    plt.bar(X_axis + 0.2, times_modularity_clustering, 0.1, label='Modularity-Clustering', color='aquamarine')
-
-    plt.xticks(X_axis, names)
-    plt.ylabel("Time (s)")
-    plt.yscale("log")
-    plt.title("Laufzeit der Algorithmen")
-    plt.legend()
-    #plt.show()
